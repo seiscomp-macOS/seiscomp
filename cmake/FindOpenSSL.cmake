@@ -10,6 +10,25 @@
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
+IF(APPLE)
+    EXECUTE_PROCESS(
+        COMMAND brew --prefix OpenSSL 
+        RESULT_VARIABLE BREW_OPENSSL
+        OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+   IF(BREW_OPENSSL EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
+     MESSAGE(STATUS "Found OpenSSL keg installed by Homebrew at ${BREW_OPENSSL_PREFIX}")
+      SET(OPENSSL_ROOT_DIR "${BREW_OPENSSL_PREFIX}")
+      SET(OPENSSL_INCLUDE_DIR "${BREW_OPENSSL_PREFIX}/include")
+      SET(OPENSSL_LIBRARIES "${BREW_OPENSSL_PREFIX}/lib")
+      SET(OPENSSL_CRYPTO_LIBRARY "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
+      SET(CRYPTO "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
+      SET(crypto "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
+	ELSE()
+	    MESSAGE(FATAL_ERROR "Exiting: Could NOT find Homebrew version of OpenSSL in ${MACOS_HOMEBREW_PATH}/opt/openssl/")
+	ENDIF()
+ENDIF(APPLE)
 
 IF(OPENSSL_LIBRARIES)
    SET(OpenSSL_FIND_QUIETLY TRUE)
@@ -19,7 +38,9 @@ IF(SSL_EAY_DEBUG AND SSL_EAY_RELEASE)
    SET(LIB_FOUND 1)
 ENDIF(SSL_EAY_DEBUG AND SSL_EAY_RELEASE)
 
-FIND_PATH(OPENSSL_INCLUDE_DIR openssl/ssl.h )
+IF(NOT APPLE)
+   FIND_PATH(OPENSSL_INCLUDE_DIR openssl/ssl.h )
+ENDIF(NOT APPLE)
 
 IF(WIN32 AND MSVC)
    # /MD and /MDd are the standard values - if somone wants to use
