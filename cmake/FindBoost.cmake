@@ -73,6 +73,22 @@ IF(WIN32)
   SET(Boost_LIB_DIAGNOSTIC_DEFINITIONS "-DBOOST_LIB_DIAGNOSTIC")
 ENDIF(WIN32)
 
+IF(APPLE)   
+    EXECUTE_PROCESS(COMMAND brew --prefix boost
+        RESULT_VARIABLE BREW_BOOST
+        OUTPUT_VARIABLE BREW_BOOST_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF(BREW_BOOST EQUAL 0 AND EXISTS "${BREW_BOOST_PREFIX}")
+      MESSAGE(STATUS "Found Boost installed by Homebrew at ${BREW_BOOST_PREFIX}")
+      SET(BOOST_ROOT ${BREW_BOOST_PREFIX})
+      SET(Boost_LIBRARY_DIRS "${BREW_BOOST_PREFIX}/lib/")
+      # On macOS don't set manually: Boost_INCLUDE_DIR or Boost_INCLUDE_DIRS or else "openssl/ssl.h" error!!!!
+      INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+    ELSE()
+        MESSAGE(FATAL_ERROR "Exiting: Could NOT find Homebrew version of Boost. Install with: brew install boost")
+    ENDIF()
+ENDIF(APPLE)
 
 SET(BOOST_INCLUDE_PATH_DESCRIPTION "directory containing the boost include files. E.g /usr/local/include/boost-1_33_1 or c:\\boost\\include\\boost-1_33_1")
 
