@@ -5,24 +5,40 @@
 #  SWIG_EXECUTABLE - the path to the swig executable
 
 SET(SWIG_FOUND FOOBAR)
-FIND_PATH(SWIG_DIR
-  SWIGConfig.cmake
-  /usr/share/swig1.3
-  /usr/share/swig/*
-  /usr/lib/swig1.3
-  /usr/local/share/swig1.3
-  /usr/local/share/swig/*
-  /sw/share/swig/*
+
+IF(APPLE)
+   EXECUTE_PROCESS(
+        COMMAND brew --prefix swig
+        RESULT_VARIABLE BREW_SWIG
+        OUTPUT_VARIABLE BREW_SWIG_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    
+    IF(BREW_SWIG EQUAL 0 AND EXISTS "${BREW_SWIG_PREFIX}")
+      MESSAGE(STATUS "Found swig installed by Homebrew at ${BREW_SWIG_PREFIX}")
+      SET(SWIG_DIR "${BREW_SWIG_PREFIX}")
+    ENDIF()  
+ELSE()
+  FIND_PATH(SWIG_DIR
+    SWIGConfig.cmake
+    /usr/share/swig1.3
+    /usr/share/swig/*
+    /usr/lib/swig1.3
+    /usr/local/share/swig1.3
+    /usr/local/share/swig/*
+    /sw/share/swig/*
+    )
+  FIND_PATH(SWIG_DIR
+    swig.swg
+    /usr/share/swig1.3
+    /usr/share/swig/*
+    /usr/lib/swig1.3
+    /usr/local/share/swig1.3
+    /usr/local/share/swig/*
+    /sw/share/swig/*
   )
-FIND_PATH(SWIG_DIR
-  swig.swg
-  /usr/share/swig1.3
-  /usr/share/swig/*
-  /usr/lib/swig1.3
-  /usr/local/share/swig1.3
-  /usr/local/share/swig/*
-  /sw/share/swig/*
-)
+ENDIF(APPLE)
+
 IF(EXISTS ${SWIG_DIR})
   IF("x${SWIG_DIR}x" STREQUAL "x${CMAKE_ROOT}/Modulesx")
     MESSAGE("SWIG_DIR should not be modules subdirectory of CMake")
