@@ -13,7 +13,22 @@
 # Modified by Jan Becker, <jabe@gfz-potsdam.de>
 #  * added REQUIRED and QUIETLY check
 #  * search for mysql/mysql.h instead of just mysql.h 
-
+IF(APPLE)
+  # macOS: find Homebrew version of MySQL
+  EXECUTE_PROCESS(COMMAND brew --prefix mysql
+	  RESULT_VARIABLE BREW_MYSQL
+	  OUTPUT_VARIABLE BREW_MYSQL_PREFIX
+	  OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	
+	IF(BREW_MYSQL EQUAL 0 AND EXISTS "${BREW_MYSQL_PREFIX}")
+	    MESSAGE(STATUS "Found MySQL installed by Homebrew at ${BREW_MYSQL_PREFIX}")
+	    SET(MYSQL_INCLUDE_DIR ${BREW_MYSQL_PREFIX}/include)
+	    SET(MYSQL_LIBRARIES ${BREW_MYSQL_PREFIX}/lib/libmysqlclient.dylib)
+	    FIND_PATH(MYSQL_INCLUDE_DIR mysql/mysql.h ${BREW_MYSQL_PREFIX}/include)
+	ENDIF()				
+ENDIF(APPLE)
+				
 if(MYSQL_INCLUDE_DIR AND MYSQL_LIBRARIES)
    set(MYSQL_FOUND TRUE)
 
