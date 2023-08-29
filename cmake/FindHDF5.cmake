@@ -9,10 +9,25 @@
 
 SET(HDF5_FOUND "NO")
 
-FIND_PATH(HDF5_INCLUDE_DIR hdf5.h
-    /usr/include/
-    /usr/local/include/
-)
+IF(NOT APPLE)
+    FIND_PATH(HDF5_INCLUDE_DIR hdf5.h
+        /usr/include/
+        /usr/local/include/
+    )
+ENDIF(NOT APPLE)
+
+IF(APPLE)
+    EXECUTE_PROCESS(COMMAND brew --prefix hdf5
+        RESULT_VARIABLE BREW_HDF5
+        OUTPUT_VARIABLE BREW_HDF5_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF(BREW_HDF5 EQUAL 0 AND EXISTS "${BREW_HDF5_PREFIX}")
+        MESSAGE(STATUS "Found HDF5 installed by Homebrew at ${BREW_HDF5_PREFIX}")
+        SET(HDF5_INCLUDE_DIR "${BREW_HDF5_PREFIX}"/include/)
+        SET(HDF5_INCLUDE_DIR "${BREW_HDF5_PREFIX}/lib/")
+    ENDIF()
+ENDIF(APPLE)
 
 SET(HDF5_NAMES ${HDF5_NAMES} hdf5)
 FIND_LIBRARY(HDF5_LIBRARY
