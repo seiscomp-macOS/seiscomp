@@ -9,11 +9,27 @@
 
 SET(FFTW3_FOUND "NO")
 
-FIND_PATH(FFTW3_INCLUDE_DIR fftw3.h
+IF(NOT APPLE)
+    FIND_PATH(FFTW3_INCLUDE_DIR fftw3.h
     /usr/include/fftw3
     /usr/local/include/fftw3
-)
+    )
+ENDIF(NOT APPLE)
 
+IF(APPLE)
+    # On macOS Homebrew fftw3 version is called "fftw"
+    EXECUTE_PROCESS(COMMAND brew --prefix fftw
+        RESULT_VARIABLE BREW_FFTW3
+        OUTPUT_VARIABLE BREW_FFTW3_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )    
+    IF(BREW_FFTW3 EQUAL 0 AND EXISTS "${BREW_FFTW3_PREFIX}")
+        MESSAGE(STATUS "Found FFTW3 installed by Homebrew at ${BREW_FFTW3_PREFIX}")
+        SET(FFTW3_INCLUDE_DIR "${BREW_FFTW3_PREFIX}"/include/)
+        SET(FFTW3_LIBRARY "${BREW_FFTW3_PREFIX}/lib/")
+    ENDIF() 
+ENDIF(APPLE)
+    
 SET(FFTW3_NAMES ${FFTW3_NAMES} fftw3)
 FIND_LIBRARY(FFTW3_LIBRARY
     NAMES ${FFTW3_NAMES}
