@@ -5,17 +5,36 @@
 # NCURSES_FOUND      - Do not attempt to use if "no" or undefined.
 
 
-FIND_PATH(NCURSES_INCLUDE_DIR ncurses.h
-	/usr/include 
-	/usr/local/include
-	/sw/include
-)
+IF(APPLE)
+   # macOS: find Homebrew version of ncurses
+   EXECUTE_PROCESS(
+      COMMAND brew --prefix ncurses
+	   RESULT_VARIABLE BREW_NCURSES
+	   OUTPUT_VARIABLE BREW_NCURSES_PREFIX
+	   OUTPUT_STRIP_TRAILING_WHITESPACE
+   )
+   IF(BREW_NCURSES EQUAL 0 AND EXISTS "${BREW_NCURSES_PREFIX}")
+	    MESSAGE(STATUS "Found ncurses installed by Homebrew at ${BREW_NCURSES_PREFIX}")
+	    SET(NCURSES_INCLUDE_DIR ${BREW_NCURSES_PREFIX}/include)
+	    SET(NCURSES_LIBRARY_DIR ${BREW_NCURSES_PREFIX}/lib)
+	    SET(NCURSES_LIBRARY ${BREW_NCURSES_PREFIX}/lib/libncurses.dylib)
+	ENDIF()				
+ENDIF(APPLE)
 
-FIND_LIBRARY(NCURSES_LIBRARY ncurses
-	/usr/lib 
-	/usr/local/lib
-	/sw/lib
-)
+IF(NOT APPLE)
+    FIND_PATH(NCURSES_INCLUDE_DIR ncurses.h
+	    /usr/include 
+	    /usr/local/include
+	    /sw/include
+    )
+
+    FIND_LIBRARY(NCURSES_LIBRARY ncurses
+	    /usr/lib 
+	    /usr/local/lib
+	    /sw/lib
+    )
+ENDIF(NOT APPLE)
+
 
 IF (NCURSES_INCLUDE_DIR AND NCURSES_LIBRARY)
    SET(NCURSES_FOUND TRUE)
