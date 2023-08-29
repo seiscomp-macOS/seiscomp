@@ -1,5 +1,21 @@
 # flex a .l file
 
+IF(APPLE)
+		EXECUTE_PROCESS(COMMAND brew --prefix flex
+			RESULT_VARIABLE BREW_FLEX
+			OUTPUT_VARIABLE BREW_FLEX_PREFIX
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+		)
+		IF(BREW_FLEX EQUAL 0 AND EXISTS "${BREW_FLEX_PREFIX}")
+			MESSAGE(STATUS "Found flex installed by Homebrew at ${BREW_FLEX_PREFIX}")
+			SET(FLEX_EXECUTABLE ${BREW_FLEX_PREFIX}/bin/flex)
+			SET(FLEX_INCLUDE_DIR ${BREW_FLEX_PREFIX}/include/)
+			INCLUDE_DIRECTORIES(${FLEX_INCLUDE_DIR})
+		ELSE()
+			MESSAGE(FATAL_ERROR "Homebrew version of flex not installed, please install with: brew install flex")
+		ENDIF()
+ENDIF(APPLE)
+
 # search flex
 MACRO(FIND_FLEX)
 	IF(NOT FLEX_EXECUTABLE)
