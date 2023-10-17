@@ -37,8 +37,24 @@ OPTION(FORCE_CXX11_ABI_0 "Option description" OFF)
 SET(PythonInterp_FIND_VERSION 3)
 SET(PythonInterp_FIND_VERSION_MAJOR 3)
 SET(PythonInterp_FIND_VERSION_EXACT 0)
+    IF(APPLE)
 
-FIND_PACKAGE(PythonInterp)
+		MESSAGE(STATUS "PYTHON_EXECUTABLE used: 	${PYTHON_EXECUTABLE}")
+		MESSAGE(STATUS "PYTHON_LIBRARIES used: 	${PYTHON_LIBRARIES}")
+		MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:${PYTHON_INCLUDE_PATH}")
+		MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
+
+	ENDIF(APPLE)
+ENDIF(SC_GLOBAL_PYTHON_WRAPPER)
+
+
+IF(NOT APPLE)
+	SET(PythonInterp_FIND_VERSION 3)
+	SET(PythonInterp_FIND_VERSION_MAJOR 3)
+	SET(PythonInterp_FIND_VERSION_EXACT 0)
+	FIND_PACKAGE(PythonInterp)
+ENDIF(NOT APPLE)  
+
 EXEC_PROGRAM(
 	${PYTHON_EXECUTABLE}
 	ARGS "-c \"import sys;print(sys.version[:3])\""
@@ -46,15 +62,17 @@ EXEC_PROGRAM(
 )
 
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
-	FIND_PACKAGE(Numpy)
+	IF(APPLE)
+		# Since cmake v3.14 can find component NumPy from Python3, which will not use cmake/FindNumpy.cmake but rather CMake's internal module FindPython3)
+		FIND_PACKAGE(Python3 COMPONENTS NumPy)
+		SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+		MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
+	ELSE()
+		FIND_PACKAGE(Numpy)	
+	ENDIF(APPLE)
 ENDIF()
 
-IF (APPLE)
-	FIND_PACKAGE(PythonLibsApple REQUIRED)
-ELSE (APPLE)
-	FIND_PACKAGE(PythonLibs REQUIRED)
-ENDIF (APPLE)
-FIND_PACKAGE(PythonInterp REQUIRED)
+
 SET(PYTHON_LIBRARY_SUFFIX /python)
 SET(PYTHON_LIBRARY_PATH lib${PYTHON_LIBRARY_SUFFIX})
 
@@ -118,6 +136,56 @@ IF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
  	SET (LINUX 1)
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+IF(APPLE)
+	# Check Mac architecture: arm64 (Apple Silicon) or x86_64 Mac INTEL
+	EXECUTE_PROCESS(COMMAND uname -m 
+	    OUTPUT_VARIABLE CMAKE_OSX_ARCHITECTURES
+	    OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	IF(${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64" )
+		  MESSAGE(STATUS "Detected Apple Silicon arm64 architecture")
+		  SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Apple Silicon Architectures")
+		  SET(MACOS_HOMEBREW_PATH "/opt/homebrew/")
+  		  SET(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
+          # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
+		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -arch arm64 -Wno-implicit-function-declaration")
+		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -arch arm64")
+	ELSEIF(${CMAKE_OSX_ARCHITECTURES} MATCHES "x86_64")
+		  MESSAGE(STATUS "Detected Apple INTEL x86_64 architecture")
+		  SET(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Apple INTEL Architectures")
+		  SET(MACOS_HOMEBREW_PATH "/usr/local/")
+	  	  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.12" CACHE STRING "")
+	  	  # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
+		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -arch x86_64 -Wno-implicit-function-declaration")
+		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -arch x86_64")
+	ELSE()
+		 MESSAGE(FATAL_ERROR "Unknown macOS architecture found!")
+	ENDIF()
+    
+	IF(EXISTS "${MACOS_HOMEBREW_PATH}/bin/brew")
+		MESSAGE(STATUS "Homebrew for macOS installed, continuing...")
+	ELSE()
+		MESSAGE(FATAL_ERROR "Homebrew for macOS not found. For installation instructions visit https://brew.sh/")
+	ENDIF()
+		
+	# On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
+    SET(CMAKE_FIND_FRAMEWORK LAST)
+    	
+    # Set RPATH for macOS - adds run-time search path for dynamic linking to libraries when building the applications
+    # Avoids error "dyld: Library not loaded" when launching a compiled program
+    SET(CMAKE_MACOSX_RPATH ON)
+     
+    # When compiling don't use the install RPATH already, but later on when installing
+    SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+	
+    # Add the automatically determined parts of the RPATH
+    # which point to directories outside the build tree to the install RPATH
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    
+	SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+	
+ENDIF(APPLE)
 
 # If gcc is installed add -wall and -pedantic to the commandline
 #
