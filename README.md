@@ -72,7 +72,7 @@ is a recommended way.
 
 ## Build
 
-### Prerequisites
+### Linux Prerequisites
 
 The following packages should be installed to compile SeisComP:
 
@@ -103,6 +103,65 @@ as the used Python3 interpreter. The same holds for Python2.
 
 Python-numpy is required if Numpy support is enable which is also
 the default configuration.
+
+### macOS Prerequisites
+
+This will compile SeisComP natively on macOS for Mac INTEL or Mac Silicon.
+Tested on macOS Ventura 13.6 on Mac INTEL and Mac Silicon architectures (M1, M2),
+
+- Install Xcode Development Tools
+
+Note that the full Xcode Development Tools from "Mac App Store" is *not* required.
+Install the Dev Tools from the Terminal instead:
+Open your Terminal.app and install first XCode with command:
+
+`xcode-select --install`
+
+- Install Homebrew for macOS
+On INTEL Mac the default brew directory is in /usr/local/ and on Silicon Mac (M1, M2, M3) the default directory is in /opt/local/homebrew/
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+```
+brew install boost #installs libboost > 1.82
+brew install cmake
+brew install fftw #installs fftw v3
+brew install flex
+brew install gcc #needed for gfortran
+brew install hdf5
+brew install mysql
+brew install ncurses
+brew install numpy
+brew install openssl #installs OpenSSL@3
+brew install python3
+brew install qt5
+brew install swig
+```
+
+If you need a more specific version of python, e.g:
+brew install python@3.10
+
+On macOS compile with, e.g: "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
+
+```
+cd seiscomp-macOS
+mkdir build-seiscomp
+cd build-seiscomp
+cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
+```
+
+If you need to compile with a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
+`cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
+
+Compile SeisComP for macOS:
+`make -j4`
+
+Install with command:
+`make install`
+
+If compilation was succesful it will install the binaries and libraries in ${HOME}/seiscomp (the MAKE_INSTALL_PREFIX).
+Launch (test) e.g 'scmv' or 'scrttv' with command:
+
+`/Users/<YOUR_USER_NAME>/seiscomp/bin/`
 
 
 ### Configuration
