@@ -107,28 +107,33 @@ the default configuration.
 ### macOS Prerequisites
 
 This will compile SeisComP natively on macOS for Mac INTEL or Mac Silicon.
-Tested on macOS Ventura 13.6 on Mac INTEL and Mac Silicon architectures (M1, M2),
+Tested on macOS Ventura 13.6.1 on Mac INTEL and Mac Silicon architectures (M1, M2).
+It should also work on the latest macOS Sonoma.
 
 - Install Xcode Development Tools
 
 Note that the full Xcode Development Tools from "Mac App Store" is *not* required.
-Install the Dev Tools from the Terminal instead:
-Open your Terminal.app and install first XCode with command:
+Just install the Dev Tools from the Terminal instead:
+
+Open your Terminal.app and install XCode command line tools with command:
 
 `xcode-select --install`
 
 - Install Homebrew for macOS
-On INTEL Mac the default brew directory is in /usr/local/ and on Silicon Mac (M1, M2, M3) the default directory is in /opt/local/homebrew/
+
+On INTEL Mac the default Homebrew directory is located in: `/usr/local/`
+On Apple Silicon Mac the default Homebrew directory is located in `/opt/local/homebrew/`
+
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 ```
-brew install boost #installs libboost > 1.82
+brew install boost #installs libboost > 1.83
 brew install cmake
 brew install fftw #installs fftw v3
 brew install flex
 brew install gcc #needed for gfortran
 brew install hdf5
-brew install mysql
+brew install mysql #mariadb can also be installed as an alternative
 brew install ncurses
 brew install numpy
 brew install openssl #installs OpenSSL@3
@@ -137,8 +142,28 @@ brew install qt5
 brew install swig
 ```
 
-If you need a more specific version of python, e.g:
-brew install python@3.10
+Note: If you need a more specific version of python, e.g:
+
+`brew install python@3.10`
+
+After that check or update your PATH to include Homebrew paths:
+
+The Homebrew shell path for INTEL Mac /usr/local/bin/ and /usr/local/sbin and /opt/homebrew/bin resp. /opt/homebrew/sbin/
+should be in your PATH
+
+`echo $PATH`
+
+e.g. for INTEL Mac:
+
+```
+/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
+```
+
+e.g. for Silicon Mac:
+
+```
+/opt/homebrew/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
+```
 
 On macOS compile with, e.g: "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
 
