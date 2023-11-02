@@ -165,7 +165,8 @@ e.g. for Silicon Mac:
 /opt/homebrew/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
 ```
 
-On macOS compile with, e.g: "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
+On macOS compile "seiscomp", e.g. "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
+
 
 ```
 cd seiscomp-macOS
@@ -174,13 +175,27 @@ cd build-seiscomp
 cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
 ```
 
-If you need to compile with a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
+Note 1: After compilation the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc and objects .o
+You should clean up the "seedlink/plugins" directory to be sure to recompile the latest versions (not necessary but should help compilation errors).
+Also if you copy your "seiscomp" directory to another platform (Apple Silicon) or INTEL the compiled libraries are still there, so better do a `make clean`.
+
+Just go to `seiscomp/src/base/seedlink/plugins` and do a `make clean`
+
+```
+cd seiscomp/src/base/seedlink/plugins
+make clean
+```
+
+
+Note 2: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
 `cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
 
-Compile SeisComP for macOS:
+Compile SeisComP for macOS in the `build-seiscomp` directory
+
 `make -j4`
 
 Install with command:
+
 `make install`
 
 If compilation was succesful it will install the binaries and libraries in ${HOME}/seiscomp (the MAKE_INSTALL_PREFIX).
