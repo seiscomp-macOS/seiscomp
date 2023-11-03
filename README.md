@@ -40,7 +40,9 @@ then
 fi
 
 target_dir=$1
-repo_path=https://github.com/SeisComP
+#repo_path=https://github.com/SeisComP
+repo_path=https://github.com/gilcel/
+
 
 echo "Cloning base repository into $target_dir"
 git clone $repo_path/seiscomp.git $target_dir
@@ -165,8 +167,23 @@ e.g. for Silicon Mac:
 /opt/homebrew/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
 ```
 
-On macOS compile "seiscomp", e.g. "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
+## git-clone the repo from repository https://github.com/gilcel/
 
+Note that you need to use the repo from https://github.com/gilcel/
+
+Use the script from `Checkout the repositories` to git-clone all the repos but change the variable `repo_path` from:
+
+`repo_path=https://github.com/SeisComP` 
+
+to: 
+
+`repo_path=https://github.com/gilcel/`
+
+
+### Compile seiscomp on macOS After succesful repo-cloning compile "seiscomp".
+
+After succesful git-cloning compile SeisComP on your Mac.
+Here "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
 
 ```
 cd seiscomp-macOS
