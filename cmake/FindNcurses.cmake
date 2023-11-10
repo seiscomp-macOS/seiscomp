@@ -7,6 +7,7 @@
 
 IF(APPLE)
    # macOS: find Homebrew version of ncurses
+   # Note that macOS System has its own but outdated ncurses lib installed.
    EXECUTE_PROCESS(
       COMMAND brew --prefix ncurses
 	   RESULT_VARIABLE BREW_NCURSES
@@ -18,7 +19,9 @@ IF(APPLE)
 	    SET(NCURSES_INCLUDE_DIR ${BREW_NCURSES_PREFIX}/include)
 	    SET(NCURSES_LIBRARY_DIR ${BREW_NCURSES_PREFIX}/lib)
 	    SET(NCURSES_LIBRARY ${BREW_NCURSES_PREFIX}/lib/libncurses.dylib)
-	ENDIF()				
+	ELSE()
+        MESSAGE(FATAL_ERROR "Homebrew version of ncurses not found. Install with: brew install ncurses")
+    ENDIF()			
 ENDIF(APPLE)
 
 IF(NOT APPLE)
