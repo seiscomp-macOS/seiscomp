@@ -119,6 +119,25 @@ IF(SC_GLOBAL_GUI)
 	IF(NOT SC_GLOBAL_GUI_QT5)
 		MESSAGE(FATAL_ERROR "Qt5 must be enabled, other versions are not supported")
 	ENDIF()
+	
+	IF(APPLE)
+        EXECUTE_PROCESS(COMMAND brew --prefix qt5
+            RESULT_VARIABLE BREW_Qt5
+            OUTPUT_VARIABLE BREW_Qt5_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        IF(BREW_Qt5 EQUAL 0 AND EXISTS "${BREW_Qt5_PREFIX}")
+            MESSAGE(STATUS "Found Qt5 installed by Homebrew at ${BREW_Qt5_PREFIX}")
+            SET(Qt5_DIR "${BREW_Qt5_PREFIX}/lib/cmake/Qt5")
+            SET(Qt5_INCLUDE_DIR "${BREW_Qt5_PREFIX}/include/")
+            MESSAGE(STATUS "Homebrew Qt5_INCLUDE_DIR = ${Qt5_INCLUDE_DIR}")
+            INCLUDE_DIRECTORIES(${Qt5_INCLUDE_DIR})
+        ELSE()
+            MESSAGE(STATUS"Homebrew version of Qt5 not found!")
+            MESSAGE(FATAL_ERROR "Install with: brew install qt5")
+        ENDIF()
+    ENDIF(APPLE)
+
 	FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Widgets)
 ENDIF()
 
