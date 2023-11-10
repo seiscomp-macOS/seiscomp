@@ -1,4 +1,4 @@
-# SeisComP
+# SeisComP for macOS compilation instructions
 
 ## About
 
@@ -21,16 +21,18 @@ questions please use the Github issue tracker of the corresponding
 repository,
 e.g. [GitHub issue tracker of this repository](https://github.com/SeisComP/seiscomp/issues).
 
-## Checkout the repositories
+## Checkout the repositories with script clone_seiscomp-macos.sh
 
 The SeisComP software collection is distributed among several repositories.
 This repository only contains the build environment, the runtime framework
 (seiscomp control script) and the documentation.
 
-To checkout all repositories to build a complete SeisComP distribution the
-following script can be used:
+To checkout all repositories to build a complete SeisComP distribution for macOS the following
+script can be used.
 
-```sh
+Copy/paste the following content to file: `clone_seiscomp-macos.sh`
+
+```
 #!/bin/bash
 
 if [ $# -eq 0 ]
@@ -74,7 +76,7 @@ is a recommended way.
 
 ## Build
 
-### Linux Prerequisites
+### Linux Prerequisites (not required for macOS compilation)
 
 The following packages should be installed to compile SeisComP:
 
@@ -123,91 +125,100 @@ Open your Terminal.app and install XCode command line tools with command:
 
 - Install Homebrew for macOS
 
-On INTEL Mac the default Homebrew directory is located in: `/usr/local/`
-On Apple Silicon Mac the default Homebrew directory is located in `/opt/local/homebrew/`
+Install Homebrew 'brew' command with the following one-liner:
 
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+`/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+
+On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
+On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
+
+First we install python3 with NumPy.
+But you alos need to install NumPy as a site-package with command: `pip3 install numpy`
+
+Here's how:
 
 ```
-brew install boost #installs libboost > 1.83
+brew install python3
+brew install numpy
+pip3 install numpy
+```
+
+Continue installing macOS dependencies with:
+
+```
+brew install boost 
 brew install cmake
-brew install fftw #installs fftw v3
+brew install fftw 
 brew install flex
-brew install gcc #needed for gfortran
+brew install gfortran
 brew install hdf5
 brew install mysql #mariadb can also be installed as an alternative
 brew install ncurses
-brew install numpy
 brew install openssl #installs OpenSSL@3
-brew install python3
 brew install qt5
 brew install swig
 ```
 
-Note: If you need a more specific version of python, e.g:
+Note: If you need a more specific version of Python, e.g:
 
 `brew install python@3.10`
 
 After that check or update your PATH to include Homebrew paths:
 
 The Homebrew shell path for INTEL Mac /usr/local/bin/ and /usr/local/sbin and /opt/homebrew/bin resp. /opt/homebrew/sbin/
-should be in your PATH
+should be in your PATH. Edit your `~/.bashrc` accordingly
 
 `echo $PATH`
 
-e.g. for INTEL Mac:
+On INTEL Mac, your `~/.bashrc`should look like (note the `/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
+
+`PATH=/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH`
+
+On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
+
+`PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH`
+
+
+### Clone the Github repositories  from https://github.com/gilcel/
+
+Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/gilcel/ and not from https://github.com/seiscomp
+Use the script  `clone_seiscomp-macos.sh` to git-clone all the repos.
+
+Here's how to proceed:
+
+1. Create directory seiscomp-macos inside your Downloads directory:
 
 ```
-/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
+mkdir ~/Downloads/seiscomp-macos
+cd ~/Downloads/seiscomp-macos
 ```
+Move the script `clone_seiscomp-macos.sh` to `~/Downloads/seiscomp-macos`
 
-e.g. for Silicon Mac:
+Change script to executable - do this once:
 
-```
-/opt/homebrew/bin:/usr/local/sbin:/bin:/usr/bin:/usr/sbin:
-```
+`chmod u+x clone_seiscomp-macos.sh`
 
-## git-clone the repo from repository https://github.com/gilcel/
+Now clone the seiscomp-macOS repos inside `~/Downloads/seiscomp-macos`
+ `./clone_seiscomp-macos.sh`
+ 
+After this you will see a the source-code directory named: `seiscomp` inside `~/Downloads/seiscomp-macos`
 
-Note that you need to use the repo from https://github.com/gilcel/
+### Compile seiscomp on macOS 
 
-Use the script from `Checkout the repositories` to git-clone all the repos but change the variable `repo_path` from:
+After succesful git-cloning with the script `clone_seiscomp-macos.sh`, compile SeisComP on your Mac with command: `cmake`
 
-`repo_path=https://github.com/SeisComP` 
-
-to: 
-
-`repo_path=https://github.com/gilcel/`
-
-
-### Compile seiscomp on macOS After succesful repo-cloning compile "seiscomp".
-
-After succesful git-cloning compile SeisComP on your Mac.
-Here "seiscomp" was git-cloned inside ~/Downloads/seiscomp-macOS:
+Still inside `~/Downloads/seiscomp-macos` do the following:
 
 ```
-cd seiscomp-macOS
 mkdir build-seiscomp
 cd build-seiscomp
 cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
 ```
 
-Note 1: After compilation the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc and objects .o
-You should clean up the "seedlink/plugins" directory to be sure to recompile the latest versions (not necessary but should help compilation errors).
-Also if you copy your "seiscomp" directory to another platform (Apple Silicon) or INTEL the compiled libraries are still there, so better do a `make clean`.
-
-Just go to `seiscomp/src/base/seedlink/plugins` and do a `make clean`
-
-```
-cd seiscomp/src/base/seedlink/plugins
-make clean
-```
-
-
-Note 2: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
+Note 1: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
 `cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
 
-Compile SeisComP for macOS in the `build-seiscomp` directory
+Compile SeisComP for macOS in the `build-seiscomp` directory:
 
 `make -j4`
 
@@ -220,6 +231,50 @@ Launch (test) e.g 'scmv' or 'scrttv' with command:
 
 `/Users/<YOUR_USER_NAME>/seiscomp/bin/`
 
+
+Note 1: After compilation the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc and objects .o
+You should clean up the "seedlink/plugins" directory to be sure to recompile the latest versions (not necessary but should help compilation errors).
+Also if you copy your "seiscomp" directory to another platform (Apple Silicon) or INTEL the compiled libraries are still there, so better do a `make clean`.
+
+Just go to `seiscomp/src/base/seedlink/plugins` and do a `make clean`
+
+```
+cd seiscomp/src/base/seedlink/plugins
+make clean
+```
+
+### Configure MySQL on macOS for better performance
+
+Copy default MYSQL configuration file to /etc/my.cnf with command:
+
+`sudo cp $(brew --prefix mysql)/support-files/my-default.cnf /etc/my.cnf`
+
+For better performance with the MySQL database, adjust the following parameters in /etc/my.cnf
+If you have more than 8GB of RAM, increase `innodb_buffer_pool_size` (default is 128MB):
+ 
+```
+innodb_buffer_pool_size = 8G
+innodb-buffer-pool-instances=16
+innodb_flush_log_at_trx_commit = 2
+```
+
+### macOS Troubleshooting
+
+If you get the following error when compiling:
+
+`"_Python3_NumPy_INCLUDE_DIR-NOTFOUND"`
+
+Then you forgot to install NumPy with `pip3` (NumPy site-package).
+To fix, do this:
+
+```
+#brew install numpy
+#pip3 install numpy
+```
+
+The NumPy site-package will then be installed to:
+
+`/usr/local/lib/python3.<VERSION_NUMBER>/site-packages`
 
 ### Configuration
 
