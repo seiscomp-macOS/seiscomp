@@ -12,13 +12,13 @@
 
 IF(APPLE)
     EXECUTE_PROCESS(
-        COMMAND brew --prefix OpenSSL 
+        COMMAND brew --prefix openssl
         RESULT_VARIABLE BREW_OPENSSL
         OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
    IF(BREW_OPENSSL EQUAL 0 AND EXISTS "${BREW_OPENSSL_PREFIX}")
-     MESSAGE(STATUS "Found OpenSSL keg installed by Homebrew at ${BREW_OPENSSL_PREFIX}")
+     MESSAGE(STATUS "Found OpenSSL installed by Homebrew at ${BREW_OPENSSL_PREFIX}")
       SET(OPENSSL_ROOT_DIR "${BREW_OPENSSL_PREFIX}")
       SET(OPENSSL_INCLUDE_DIR "${BREW_OPENSSL_PREFIX}/include")
       SET(OPENSSL_LIBRARIES "${BREW_OPENSSL_PREFIX}/lib")
@@ -26,7 +26,7 @@ IF(APPLE)
       SET(CRYPTO "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
       SET(crypto "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
 	ELSE()
-	    MESSAGE(FATAL_ERROR "Exiting: Could NOT find Homebrew version of OpenSSL in ${MACOS_HOMEBREW_PATH}/opt/openssl/")
+	    MESSAGE(FATAL_ERROR "Homebrew version of OpenSSL not found. Install with: brew install openssl")
 	ENDIF()
 ENDIF(APPLE)
 
