@@ -63,10 +63,25 @@ EXEC_PROGRAM(
 
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	IF(APPLE)
-		# Since cmake v3.14 can find component NumPy from Python3, which will not use cmake/FindNumpy.cmake but rather CMake's internal module FindPython3)
+	    # macOS: find Homebrew version of NumPy
+        EXECUTE_PROCESS(COMMAND brew --prefix numpy
+	        RESULT_VARIABLE BREW_NUMPY
+	        OUTPUT_VARIABLE BREW_NUMPY_PREFIX
+	        OUTPUT_STRIP_TRAILING_WHITESPACE
+	    )
+		
+	IF(BREW_NUMPY EQUAL 0 AND EXISTS "${BREW_NUMPY_PREFIX}")
+	    MESSAGE(STATUS "Found NumPy installed by Homebrew at ${BREW_NUMPY_PREFIX}")
+	    # Since cmake v3.14 can find component NumPy from Python3, which will not use cmake/FindNumpy.cmake but rather CMake's internal module FindPython3)
+		# Note that you need to manually install NumPy site-package with command: "pip3 install numpy"
 		FIND_PACKAGE(Python3 COMPONENTS NumPy)
 		SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
 		MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
+	ELSE()
+	    MESSAGE(STATUS"Homebrew version of NumPy not found!")
+        MESSAGE(FATAL_ERROR "Install with: brew install numpy; pip3 install numpy")
+    ENDIF()		
+
 	ELSE()
 		FIND_PACKAGE(Numpy)	
 	ENDIF(APPLE)
