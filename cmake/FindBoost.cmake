@@ -86,7 +86,7 @@ IF(APPLE)
       # On macOS don't set manually: Boost_INCLUDE_DIR or Boost_INCLUDE_DIRS or else "openssl/ssl.h" error!!!!
       INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
     ELSE()
-        MESSAGE(FATAL_ERROR "Exiting: Could NOT find Homebrew version of Boost. Install with: brew install boost")
+        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
     ENDIF()
 ENDIF(APPLE)
 
