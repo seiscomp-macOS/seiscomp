@@ -26,6 +26,8 @@ IF(APPLE)
         MESSAGE(STATUS "Found HDF5 installed by Homebrew at ${BREW_HDF5_PREFIX}")
         SET(HDF5_INCLUDE_DIR "${BREW_HDF5_PREFIX}"/include/)
         SET(HDF5_INCLUDE_DIR "${BREW_HDF5_PREFIX}/lib/")
+    ELSE()
+         MESSAGE(FATAL_ERROR "Homebrew version of HDF5 not found. Install with: brew install hdf5")
     ENDIF()
 ENDIF(APPLE)
 
