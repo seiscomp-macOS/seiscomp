@@ -12,7 +12,7 @@ IF(APPLE)
 			SET(FLEX_INCLUDE_DIR ${BREW_FLEX_PREFIX}/include/)
 			INCLUDE_DIRECTORIES(${FLEX_INCLUDE_DIR})
 		ELSE()
-			MESSAGE(FATAL_ERROR "Homebrew version of flex not installed, please install with: brew install flex")
+			MESSAGE(FATAL_ERROR "Homebrew version of flex not found! Install with: brew install flex")
 		ENDIF()
 ENDIF(APPLE)
 
