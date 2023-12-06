@@ -33,37 +33,57 @@ OPTION(SC_ENABLE_CONTRIB "Enables descending into the contrib directory" ON)
 
 IF(SC_GLOBAL_PYTHON_WRAPPER)
     IF(APPLE)
-       # On macOS if user has set exact Python_VERSION_REQUIRED var with e.g: -DPython_VERSION_REQUIRED=3.10
-	   IF(Python_VERSION_REQUIRED)
-          # macOS: check Homebrew version of Python_VERSION_REQUIRED:
-		  EXECUTE_PROCESS(
-			    COMMAND brew --prefix python@${Python_VERSION_REQUIRED}
-				    RESULT_VARIABLE BREW_PYTHON
-				    OUTPUT_VARIABLE BREW_PYTHON_PREFIX
-				    OUTPUT_STRIP_TRAILING_WHITESPACE
-			)
-			FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT REQUIRED COMPONENTS Interpreter Development)
-       	ELSE (Python_VERSION_REQUIRED)
-       	    # macOS: check Homebrew version of Python3
+        # IMPORTANT: Set Python3_FIND_STRATEGY to LOCATION so it will search for the given version number first
+        # if Python3_ROOT_DIR is set.
+        # helps to set the python version which is desired instead of the latest Python3 version (e.g. Python 3.12)
+        SET(Python3_FIND_STRATEGY LOCATION)
+        
+        # On macOS if user has set exact Python_VERSION_REQUIRED var with e.g: -DPython_VERSION_REQUIRED=3.10
+        IF(Python_VERSION_REQUIRED)
+            # macOS: check Homebrew version of Python_VERSION_REQUIRED:
+          	EXECUTE_PROCESS(
+                COMMAND brew --prefix python@${Python_VERSION_REQUIRED}
+                    RESULT_VARIABLE BREW_PYTHON
+                    OUTPUT_VARIABLE BREW_PYTHON_PREFIX
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+		ELSE()
+			# macOS: check Homebrew version of Python to be 3.11 by default:
 			EXECUTE_PROCESS(
-			    COMMAND brew --prefix python3
-				    RESULT_VARIABLE BREW_PYTHON
-				    OUTPUT_VARIABLE BREW_PYTHON_PREFIX
-				    OUTPUT_STRIP_TRAILING_WHITESPACE
+				COMMAND brew --prefix python@3.11
+					RESULT_VARIABLE BREW_PYTHON
+					OUTPUT_VARIABLE BREW_PYTHON_PREFIX
+					OUTPUT_STRIP_TRAILING_WHITESPACE
 			)
-			SET(Python3_ROOT_DIR ${BREW_PYTHON_PREFIX})
-			FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
-		ENDIF(Python_VERSION_REQUIRED)
-		
-		SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-		SET(PYTHON_LIBRARIES ${Python3_LIBRARIES})
-		SET(PYTHON_INCLUDE_DIR ${Python3_INCLUDE_DIRS})
-		SET(PYTHON_INCLUDE_PATH ${Python3_INCLUDE_DIRS})
+		ENDIF()
 
-		MESSAGE(STATUS "PYTHON_EXECUTABLE used: 	${PYTHON_EXECUTABLE}")
-		MESSAGE(STATUS "PYTHON_LIBRARIES used: 	${PYTHON_LIBRARIES}")
-		MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:${PYTHON_INCLUDE_PATH}")
-		MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
+		IF(BREW_PYTHON EQUAL 0 AND EXISTS "${BREW_PYTHON_PREFIX}")
+			SET(Python3_ROOT_DIR "${BREW_PYTHON_PREFIX}")
+			IF(Python_VERSION_REQUIRED)	
+				MESSAGE(STATUS "Found Python@${Python_VERSION_REQUIRED} installed by Homebrew at ${BREW_PYTHON_PREFIX}")
+				FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT REQUIRED COMPONENTS Interpreter Development)
+			ELSE()
+				MESSAGE(STATUS "Found Python3.11 installed by Homebrew at ${BREW_PYTHON_PREFIX}")
+				FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
+			ENDIF()
+		ELSE()
+		    MESSAGE(STATUS "Homebrew Python3 not found.")
+        	IF(Python_VERSION_REQUIRED)		
+				MESSAGE(FATAL_ERROR "Install with: brew install python@${Python_VERSION_REQUIRED}; pip${Python_VERSION_REQUIRED} install numpy")
+			ELSE()
+				MESSAGE(FATAL_ERROR "Install with: brew install python@3.11; pip3.11 install numpy")
+        	ENDIF()	
+		ENDIF()
+    
+        SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+        SET(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+        SET(PYTHON_INCLUDE_DIR ${Python3_INCLUDE_DIRS})
+        SET(PYTHON_INCLUDE_PATH ${Python3_INCLUDE_DIRS})
+
+        MESSAGE(STATUS "PYTHON_EXECUTABLE used:     ${PYTHON_EXECUTABLE}")
+        MESSAGE(STATUS "PYTHON_LIBRARIES used: 	    ${PYTHON_LIBRARIES}")
+        MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:   ${PYTHON_INCLUDE_PATH}")
+        MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
 
 	ENDIF(APPLE)
 ENDIF(SC_GLOBAL_PYTHON_WRAPPER)
@@ -85,24 +105,30 @@ EXEC_PROGRAM(
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	IF(APPLE)
 	    # macOS: find Homebrew version of NumPy
-        EXECUTE_PROCESS(COMMAND brew --prefix numpy
-	        RESULT_VARIABLE BREW_NUMPY
-	        OUTPUT_VARIABLE BREW_NUMPY_PREFIX
-	        OUTPUT_STRIP_TRAILING_WHITESPACE
-	    )
+        IF(Python_VERSION_REQUIRED)	
+			EXECUTE_PROCESS(COMMAND pip${Python_VERSION_REQUIRED} show numpy
+	    	RESULT_VARIABLE EXIT_CODE
+	    	    OUTPUT_QUIET
+	    	)
+		ELSE()
+			EXECUTE_PROCESS(COMMAND pip3 show numpy
+			RESULT_VARIABLE EXIT_CODE
+				OUTPUT_QUIET
+			)
+		ENDIF()
 		
-	IF(BREW_NUMPY EQUAL 0 AND EXISTS "${BREW_NUMPY_PREFIX}")
-	    MESSAGE(STATUS "Found NumPy installed by Homebrew at ${BREW_NUMPY_PREFIX}")
-	    # Since cmake v3.14 can find component NumPy from Python3, which will not use cmake/FindNumpy.cmake but rather CMake's internal module FindPython3)
-		# Note that you need to manually install NumPy site-package with command: "pip3 install numpy"
-		FIND_PACKAGE(Python3 COMPONENTS NumPy)
-		SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
-		MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
-	ELSE()
-	    MESSAGE(STATUS"Homebrew version of NumPy not found!")
-        MESSAGE(FATAL_ERROR "Install with: brew install numpy; pip3 install numpy")
-    ENDIF()		
-
+		IF (${EXIT_CODE} EQUAL 0)
+			IF(Python_VERSION_REQUIRED)	
+				FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT COMPONENTS NumPy)
+				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+			ELSE()
+				FIND_PACKAGE(Python3 COMPONENTS NumPy)
+				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+			ENDIF()
+			MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
+		ELSE()
+			MESSAGE(FATAL_ERROR "NumPy not installed. Install with: brew install numpy; pip3 install numpy")	
+		ENDIF()
 	ELSE()
 		FIND_PACKAGE(Numpy)	
 	ENDIF(APPLE)
