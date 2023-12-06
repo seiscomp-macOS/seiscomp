@@ -153,40 +153,12 @@ ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(APPLE)
-	# Check Mac architecture: arm64 (Apple Silicon) or x86_64 Mac INTEL
-	EXECUTE_PROCESS(COMMAND uname -m 
-	    OUTPUT_VARIABLE CMAKE_OSX_ARCHITECTURES
-	    OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	IF(${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64" )
-		  MESSAGE(STATUS "Detected Apple Silicon arm64 architecture")
-		  SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Apple Silicon Architectures")
-		  SET(MACOS_HOMEBREW_PATH "/opt/homebrew/")
-  		  SET(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
-          # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
-		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -arch arm64 -Wno-implicit-function-declaration")
-		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -arch arm64")
-	ELSEIF(${CMAKE_OSX_ARCHITECTURES} MATCHES "x86_64")
-		  MESSAGE(STATUS "Detected Apple INTEL x86_64 architecture")
-		  SET(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Apple INTEL Architectures")
-		  SET(MACOS_HOMEBREW_PATH "/usr/local/")
-	  	  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "")
-	  	  # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
-		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -arch x86_64 -Wno-implicit-function-declaration")
-		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -arch x86_64")
-	ELSE()
-		 MESSAGE(FATAL_ERROR "Unknown macOS architecture found!")
-	ENDIF()
+    # Set macOS clang C & C++ compiler flags - works for both Mac Apple Silicon & Mac INTEL
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wno-implicit-function-declaration")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     
-	IF(EXISTS "${MACOS_HOMEBREW_PATH}/bin/brew")
-		MESSAGE(STATUS "Homebrew for macOS installed, continuing...")
-	ELSE()
-		MESSAGE(FATAL_ERROR "Homebrew for macOS not found. For installation instructions visit https://brew.sh/")
-	ENDIF()
-		
-	# On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
+    # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
     SET(CMAKE_FIND_FRAMEWORK LAST)
-    	
     # Set RPATH for macOS - adds run-time search path for dynamic linking to libraries when building the applications
     # Avoids error "dyld: Library not loaded" when launching a compiled program
     SET(CMAKE_MACOSX_RPATH ON)
