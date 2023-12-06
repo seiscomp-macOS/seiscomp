@@ -35,18 +35,13 @@ Copy/paste the following content to file: `clone_seiscomp-macos.sh`
 ```
 #!/bin/bash
 
-if [ $# -eq 0 ]
-then
-    echo "$0 <target-directory>"
-    exit 1
-fi
 
-target_dir=$1
-#repo_path=https://github.com/SeisComP
+target_dir="seiscomp-macOS"
 repo_path=https://github.com/gilcel/
 
+WORKDIR=$(pwd)
 
-echo "Cloning base repository into $target_dir"
+echo "Cloning seiscomp base repository into $target_dir"
 git clone $repo_path/seiscomp.git $target_dir
 
 echo "Cloning base components"
@@ -60,14 +55,15 @@ git clone $repo_path/extras.git
 echo "Cloning external base components"
 git clone $repo_path/contrib-gns.git
 git clone $repo_path/contrib-ipgp.git
-git clone https://github.com/swiss-seismological-service/sed-SeisComP-contributions.git contrib-sed
+git clone $repo_path/contrib-sed.git
 
-echo "Done"
+echo "Cloning SeisComP MeRT repo into ${target_dir}/src/base/extras/"
+/bin/cd "${target_dir}/src/extras/" 
+git clone $repo_path/scmert.git
+
+echo "Done cloning seiscomp-macOS"
 
 cd ../../
-
-echo "If you want to use 'mu', call 'mu register --recursive'"
-echo "To initialize the build, run 'make'."
 ```
 
 To keep track of the state of each subrepository, [mu-repo](http://fabioz.github.io/mu-repo/)
@@ -110,16 +106,15 @@ the default configuration.
 
 ### macOS Prerequisites
 
-This will compile SeisComP natively on macOS for Mac INTEL or Mac Silicon.
-Tested on macOS Ventura 13.6.1 on Mac INTEL and Mac Silicon architectures (M1, M2).
-It should also work on the latest macOS Sonoma.
+This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon architectures (M1, M2, M3).
+Tested on macOS Ventura 13.x and Sonoma 14.x on Mac INTEL and Mac Silicon.
 
 - Install Xcode Development Tools
 
+First we need to install the Development tools (Command Line Tools).
 Note that the full Xcode Development Tools from "Mac App Store" is *not* required.
-Just install the Dev Tools from the Terminal instead:
 
-Open your Terminal.app and install XCode command line tools with command:
+Open your "Terminal.app" and install Xcode command line tools with command:
 
 `xcode-select --install`
 
@@ -132,15 +127,14 @@ Install Homebrew 'brew' command with the following one-liner:
 On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
 On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
 
-First we install python3 with NumPy.
-But you alos need to install NumPy as a site-package with command: `pip3 install numpy`
+Python 3.11 is recommended since Python 3.12 has compatibility issues with seedlink.
 
-Here's how:
+First install Python v3.11 with NumPy, which needs to be installed as a site-package with pip3.
 
 ```
-brew install python3
+brew install python@3.11
 brew install numpy
-pip3 install numpy
+pip3.11 install numpy
 ```
 
 Continue installing macOS dependencies with:
@@ -154,14 +148,15 @@ brew install gfortran
 brew install hdf5
 brew install mysql #mariadb can also be installed as an alternative
 brew install ncurses
-brew install openssl #installs OpenSSL@3
+brew install openssl
 brew install qt5
 brew install swig
 ```
 
-Note: If you need a more specific version of Python, e.g:
+Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
 
 `brew install python@3.10`
+`pip3.10 install numpy`
 
 After that check or update your PATH to include Homebrew paths:
 
