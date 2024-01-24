@@ -1,4 +1,16 @@
-# SeisComP for macOS compilation instructions
+# SeisComP for macOS
+
+Welcome to the macOS port of SeisComP, a seismological software for data acquisition, processing, distribution and interactive analysis.
+Please note that this is a forked repository of SeisComP developed by the GEOFON Program at Helmholtz Centre Potsdam GFZ German Research Centre for Geosciences and gempa GmbH,
+so no support is provided from GFZ or gempa GmbH.
+
+Check official site:
+https://www.seiscomp.de
+
+Original Github repository:
+https://github.com/seiscomp/
+
+## SeisComP for macOS compilation instructions
 
 ## About
 
@@ -34,7 +46,6 @@ Copy/paste the following content to file: `clone_seiscomp-macos.sh`
 
 ```
 #!/bin/bash
-
 
 target_dir="seiscomp-macOS"
 repo_path=https://github.com/gilcel/
