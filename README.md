@@ -48,7 +48,7 @@ Copy/paste the following content to file: `clone_seiscomp-macos.sh`
 #!/bin/bash
 
 target_dir="seiscomp-macOS"
-repo_path=https://github.com/gilcel/
+repo_path=https://github.com/seiscomp-macos/
 
 WORKDIR=$(pwd)
 
@@ -185,9 +185,9 @@ On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/
 `PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH`
 
 
-### Clone the Github repositories  from https://github.com/gilcel/
+### Clone the Github repositories  from https://github.com/seiscomp-macos/
 
-Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/gilcel/ and not from https://github.com/seiscomp
+Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/seiscomp-macos/ and not from https://github.com/seiscomp
 Use the script  `clone_seiscomp-macos.sh` to git-clone all the repos.
 
 Here's how to proceed:
