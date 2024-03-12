@@ -82,27 +82,13 @@ is a recommended way.
 
 ## Build
 
-### Linux Prerequisites (not required for macOS compilation)
+### macOS Prerequisites
 
-The following packages should be installed to compile SeisComP:
+These instructions will let you compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon architectures (M1, M2, M3).
+Tested on macOS Ventura 13.x and Sonoma 14.x on Mac INTEL and Mac Silicon.
 
-- g++
-- git
-- cmake + cmake-gui
-- libboost
-- libxml2-dev
-- flex
-- libfl-dev
-- libssl-dev
-- crypto-dev
-- python-dev (optional)
-- python-numpy (optional)
-- libqt4-dev (optional)
-- qtbase5-dev (optional)
-- libmysqlclient-dev (optional)
-- libpq-dev (optional)
-- libsqlite3-dev (optional)
-- ncurses-dev (optional)
+**Note**: The Bash-Shell (bash) will be used instead of macOS default Z Shell (zsh),
+so we will use .bashrc to edit the PATH.
 
 The Python development libraries are required if Python wrappers should be
 compiled which is the default configuration. The development files must
@@ -113,10 +99,6 @@ as the used Python3 interpreter. The same holds for Python2.
 Python-numpy is required if Numpy support is enable which is also
 the default configuration.
 
-### macOS Prerequisites
-
-This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon architectures (M1, M2, M3).
-Tested on macOS Ventura 13.x and Sonoma 14.x on Mac INTEL and Mac Silicon.
 
 - Install Xcode Development Tools
 
@@ -133,10 +115,11 @@ Install Homebrew 'brew' command with the following one-liner:
 
 `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 
-On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
-On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
+> On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
+>
+> On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
 
-Python 3.11 is recommended since Python 3.12 has compatibility issues with seedlink.
+**Python 3.11 is recommended since Python 3.12 has compatibility issues with seedlink and other Python modules.**
 
 First install Python v3.11 with NumPy, which needs to be installed as a site-package with pip3.
 
@@ -146,7 +129,29 @@ brew install numpy
 pip3.11 install numpy
 ```
 
-Continue installing macOS dependencies with:
+**IMPORTANT**:
+
+Since beginning of March 2024, Homebrew installs Python 3.12 as the default Python3 version.
+
+However SeisComP Python modules prefer Python 3.11, so if you don't set the Python 3.11 PATH
+correctly the SeisComP Python scripts will be executed with Python 3.12 and it will crash
+(since some Python modules were compiled with Python 3.11).
+
+So we need to add **Python 3.11** before the /usr/local/bin resp. /opt/homebrew/opt/bin/ to Bash PATH:
+
+Edit .bashrc and add **python@3.11** binary location, something like:
+
+> On INTEL Mac, your `~/.bashrc`should look like (note the `/usr/local/opt/python@3.11/:/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
+>
+> `export PATH="/usr/local/opt/python@3.11/libexec/bin:/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH"`
+
+
+> On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
+>
+> `export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH"`
+
+
+### Continue installing macOS dependencies with:
 
 ```
 brew install boost 
@@ -161,26 +166,6 @@ brew install openssl
 brew install qt5
 brew install swig
 ```
-
-Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
-
-`brew install python@3.10`
-`pip3.10 install numpy`
-
-After that check or update your PATH to include Homebrew paths:
-
-The Homebrew shell path for INTEL Mac /usr/local/bin/ and /usr/local/sbin and /opt/homebrew/bin resp. /opt/homebrew/sbin/
-should be in your PATH. Edit your `~/.bashrc` accordingly
-
-`echo $PATH`
-
-On INTEL Mac, your `~/.bashrc`should look like (note the `/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
-
-`PATH=/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH`
-
-On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
-
-`PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH`
 
 
 ### Clone the Github repositories  from https://github.com/gilcel/
@@ -268,12 +253,12 @@ If you get the following error when compiling:
 
 `"_Python3_NumPy_INCLUDE_DIR-NOTFOUND"`
 
-Then you forgot to install NumPy with `pip3` (NumPy site-package).
+Then you forgot to install NumPy with `pip3.11` (NumPy site-package).
 To fix, do this:
 
 ```
 #brew install numpy
-#pip3 install numpy
+#pip3.11 install numpy
 ```
 
 The NumPy site-package will then be installed to:
