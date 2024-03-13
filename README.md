@@ -1,6 +1,7 @@
 # SeisComP for macOS
 
 Welcome to the macOS port of SeisComP, a seismological software for data acquisition, processing, distribution and interactive analysis.
+
 Please note that this is a forked repository of SeisComP developed by the GEOFON Program at Helmholtz Centre Potsdam GFZ German Research Centre for Geosciences and gempa GmbH,
 so no support is provided from GFZ or gempa GmbH.
 
@@ -25,6 +26,12 @@ SeisComP is primarily released under the AGPL 3.0. Please check the [license agr
 
 ## Asking Questions
 
+Note: If you have a specific issue wit "seiscomp-macOS" please post your issue to
+[seiscomp-macOS Issues](https://github.com/seiscomp-macOS/seiscomp/issues)
+and not in the official forum of "seiscomp".
+
+For specific "seiscomp" questions:
+
 Please ask questions in the [forums](https://forum.seiscomp3.org) and
 use appropriate topics to get help on usage or to discuss new features.
 
@@ -33,7 +40,7 @@ questions please use the Github issue tracker of the corresponding
 repository,
 e.g. [GitHub issue tracker of this repository](https://github.com/SeisComP/seiscomp/issues).
 
-## Checkout the repositories with script clone_seiscomp-macos.sh
+## Checkout the repositories with script: clone_seiscomp-macos.sh
 
 The SeisComP software collection is distributed among several repositories.
 This repository only contains the build environment, the runtime framework
@@ -133,22 +140,26 @@ pip3.11 install numpy
 
 Since beginning of March 2024, Homebrew installs Python 3.12 as the default Python3 version.
 
-However SeisComP Python modules prefer Python 3.11, so if you don't set the Python 3.11 PATH
+However SeisComP's Python modules prefer Python 3.11, so if you don't set the Python 3.11 PATH
 correctly the SeisComP Python scripts will be executed with Python 3.12 and it will crash
 (since some Python modules were compiled with Python 3.11).
 
-So we need to add **Python 3.11** before the /usr/local/bin resp. /opt/homebrew/opt/bin/ to Bash PATH:
+We need to add **Python 3.11** before the /usr/local/bin resp. /opt/homebrew/opt/bin/ to Bash PATH:
 
 Edit .bashrc and add **python@3.11** binary location, something like:
 
-> On INTEL Mac, your `~/.bashrc`should look like (note the `/usr/local/opt/python@3.11/:/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
+> On INTEL Mac, your `~/.bashrc`should look like:
 >
 > `export PATH="/usr/local/opt/python@3.11/libexec/bin:/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH"`
+>
+> Note the `/usr/local/opt/python@3.11/:/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
 
 
-> On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
+> On Apple Silicon Mac, your `~/.bashrc`should look like: 
 >
 > `export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH"`
+>
+> Note the `/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
 
 
 ### Continue installing macOS dependencies with:
@@ -171,6 +182,7 @@ brew install swig
 ### Clone the Github repositories  from https://github.com/seiscomp-macos/
 
 Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/seiscomp-macos/ and not from https://github.com/seiscomp
+
 Use the script  `clone_seiscomp-macos.sh` to git-clone all the repos.
 
 Here's how to proceed:
@@ -205,6 +217,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
 ```
 
 Note 1: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
+
 `cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
 
 Compile SeisComP for macOS in the `build-seiscomp` directory:
@@ -215,15 +228,23 @@ Install with command:
 
 `make install`
 
-If compilation was succesful it will install the binaries and libraries in ${HOME}/seiscomp (the MAKE_INSTALL_PREFIX).
+If compilation was succesful the installed  binaries will be in `${HOME}/seiscomp` (the choosed `CMAKE_INSTALL_PREFIX`).
+
 Launch (test) e.g 'scmv' or 'scrttv' with command:
 
-`/Users/<YOUR_USER_NAME>/seiscomp/bin/`
+`/Users/<YOUR_USER_NAME>/seiscomp/bin/scmv`
+
+`/Users/<YOUR_USER_NAME>/seiscomp/bin/scrttv`
 
 
-Note 1: After compilation the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc and objects .o
-You should clean up the "seedlink/plugins" directory to be sure to recompile the latest versions (not necessary but should help compilation errors).
-Also if you copy your "seiscomp" directory to another platform (Apple Silicon) or INTEL the compiled libraries are still there, so better do a `make clean`.
+### Cleanup Seedlink plugins directory
+
+Note 1: Not required but after compilation, the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc.
+
+You should clean up the "seedlink/plugins" directory to be sure to recompile the latest versions (not required but could help to avoid compilation errors).
+
+Also if you copy your "seiscomp" directory to another Mac platform, e.g. INTEL to Apple Silicon, the compiled libraries for the specific platforms are still there,
+and could lead to crashes, so better clean up with a `make clean`.
 
 Just go to `seiscomp/src/base/seedlink/plugins` and do a `make clean`
 
@@ -263,7 +284,7 @@ To fix, do this:
 
 The NumPy site-package will then be installed to:
 
-`/usr/local/lib/python3.<VERSION_NUMBER>/site-packages`
+`/usr/local/lib/python3.11/site-packages`
 
 ### Configuration
 
