@@ -150,16 +150,16 @@ Edit .bashrc and add **python@3.11** binary location, something like:
 
 > On INTEL Mac, your `~/.bashrc`should look like:
 >
-> `export PATH="/usr/local/opt/python@3.11/libexec/bin:/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH"`
->
-> Note the `/usr/local/opt/python@3.11/:/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
+`export PATH="/usr/local/opt/python@3.11/libexec/bin:/usr/local/bin/:/usr/local/sbin/:/bin:/usr/bin:/usr/sbin:/usr/X11/bin:$PATH"`
+
+Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
 
 > On Apple Silicon Mac, your `~/.bashrc`should look like: 
 >
-> `export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH"`
->
-> Note the `/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:` before `/bin/:/usr/bin`)
+`export PATH="/opt/homebrew/opt/python@3.11/libexec/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH"`
+
+Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
 
 ### Continue installing macOS dependencies with:
