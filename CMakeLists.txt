@@ -104,14 +104,15 @@ EXEC_PROGRAM(
 
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	IF(APPLE)
-	    # macOS: find Homebrew version of NumPy
+	    # macOS: find specific Python_Version version of NumPy
         IF(Python_VERSION_REQUIRED)	
 			EXECUTE_PROCESS(COMMAND pip${Python_VERSION_REQUIRED} show numpy
 	    	RESULT_VARIABLE EXIT_CODE
 	    	    OUTPUT_QUIET
 	    	)
 		ELSE()
-			EXECUTE_PROCESS(COMMAND pip3 show numpy
+			# macOS: pip3.11 (from Python3.11) with NumPy v3.11 recommended
+			EXECUTE_PROCESS(COMMAND pip3.11 show numpy
 			RESULT_VARIABLE EXIT_CODE
 				OUTPUT_QUIET
 			)
@@ -127,7 +128,7 @@ IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 			ENDIF()
 			MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
 		ELSE()
-			MESSAGE(FATAL_ERROR "NumPy not installed. Install with: brew install numpy; pip3 install numpy")	
+			MESSAGE(FATAL_ERROR "NumPy not installed. Install with following commands: brew install python@3.11; brew install numpy; pip3.11 install numpy")	
 		ENDIF()
 	ELSE()
 		FIND_PACKAGE(Numpy)	
