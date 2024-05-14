@@ -154,8 +154,8 @@ ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 IF(APPLE)
     # Set macOS clang C & C++ compiler flags - works for both Mac Apple Silicon & Mac INTEL
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wno-implicit-function-declaration")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wno-everything -Wno-implicit-function-declaration")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-everything")
     
     # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
     SET(CMAKE_FIND_FRAMEWORK LAST)
