@@ -12,7 +12,7 @@
 
 IF(APPLE)
     EXECUTE_PROCESS(
-        COMMAND brew --prefix openssl
+        COMMAND brew --prefix openssl@3
         RESULT_VARIABLE BREW_OPENSSL
         OUTPUT_VARIABLE BREW_OPENSSL_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -26,7 +26,7 @@ IF(APPLE)
       SET(CRYPTO "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
       SET(crypto "${BREW_OPENSSL_PREFIX}/lib/libcrypto.dylib")
 	ELSE()
-	    MESSAGE(FATAL_ERROR "Homebrew version of OpenSSL not found. Install with: brew install openssl")
+	    MESSAGE(FATAL_ERROR "Homebrew version of OpenSSL3 not found. Install with: brew install openssl@3")
 	ENDIF()
 ENDIF(APPLE)
 
