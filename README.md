@@ -127,7 +127,6 @@ Install Homebrew 'brew' command with the following one-liner:
 > On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
 
 **Python 3.11 is recommended since Python 3.12 has compatibility issues with seedlink and other Python modules.**
-
 First install Python v3.11 with NumPy, which needs to be installed as a site-package with pip3.
 
 ```
@@ -136,7 +135,7 @@ brew install numpy
 pip3.11 install numpy
 ```
 
-**IMPORTANT**:
+**IMPORTANT for Python installation **:
 
 Since beginning of March 2024, Homebrew installs Python 3.12 as the default Python3 version.
 
@@ -161,11 +160,15 @@ Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
 Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
+**IMPORTANT for Boost installation **:
+
+Since May 2025, the Boost library was updated to v1.85 which is not compatible with SeisComP (Linux & Mac).
+Therefore we need to install Boost < 1.85. As of this writing Boost v1.76 is available with Homebrew.
 
 ### Continue installing macOS dependencies with:
 
 ```
-brew install boost 
+brew install boost@1.76 
 brew install cmake
 brew install fftw 
 brew install flex
@@ -173,13 +176,13 @@ brew install gfortran
 brew install hdf5
 brew install mysql #mariadb can also be installed as an alternative
 brew install ncurses
-brew install openssl
-brew install qt5
+brew install openssl@3
+brew install qt@5
 brew install swig
 ```
 
 
-### Clone the Github repositories  from https://github.com/seiscomp-macos/
+### Clone the Github repositories from https://github.com/seiscomp-macos/
 
 Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/seiscomp-macos/ and not from https://github.com/seiscomp
 
@@ -285,42 +288,6 @@ To fix, do this:
 The NumPy site-package will then be installed to:
 
 `/usr/local/lib/python3.11/site-packages`
-
-### Configuration
-
-The SeisComP build system provides several build options which can be
-controlled with a cmake gui or from the commandline
-passing `-D[OPTION]=ON|OFF` to cmake.
-
-In addition to standard cmake options such as `CMAKE_INSTALL_PREFIX`
-the following global options are available:
-
-|Option|Default|Description|
-|------|-------|-----------|
-|SC_GLOBAL_UNITTESTS|ON|Whether to build unittests or not. If enabled then use `ctest` in the build directory to run the unittests.|
-|SC_GLOBAL_PYTHON_WRAPPER|ON|Build Python wrappers for the C++ libraries. You should not turn off this option unless you know exactly what you are doing.|
-|SC_GLOBAL_PYTHON_WRAPPER_NUMPY|ON|Add Numpy support to Python wrappers. If enabled then all SeisComP arrays will provide a method `numpy()` which returns a Numpy array representation.|
-|SC_ENABLE_CONTRIB|ON|Enable inclusion of external contributions into the build. This includes all directories in `src/extras`.|
-|SC_GLOBAL_GUI|ON|Enables compilation of GUI components. This requires the Qt libraries to be installed. Either Qt4 or Qt5 are supported. The build will prefer Qt5 if found and will fallback to Qt4 if the Qt5 development libraries are not installed on the host system.|
-|SC_GLOBAL_GUI_QT5|ON|If SC_GLOBAL_GUI is enabled then Qt5 support will be enabled if this option is active. Otherwise only Qt4 will be supported.|
-|SC_DOC_GENERATE|OFF|Enable generation of documentation|
-|SC_DOC_GENERATE_HTML|ON|Enable generation of HTML documentation|
-|SC_DOC_GENERATE_MAN|ON|Enable generation of MAN pages|
-|SC_DOC_GENERATE_PDF|OFF|Enable generation of PDF documentation|
-
-### Compilation
-
-1. Clone all required repositories (see above)
-2. Run ```make```
-3. Configure the build
-4. Press 'c' as long as 'g' appears
-5. Press 'g' to generate the Makefiles
-6. Enter the build directory and run ```make```
-
-### Installation
-
-1. Enter the build directory and run ```make install```
-   to install SeisComP
 
 ## Contributing improvements and bug fixes
 
