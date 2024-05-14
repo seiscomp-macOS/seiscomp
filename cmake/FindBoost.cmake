@@ -74,7 +74,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(APPLE)   
-    EXECUTE_PROCESS(COMMAND brew --prefix boost
+    EXECUTE_PROCESS(COMMAND brew --prefix boost@1.76
         RESULT_VARIABLE BREW_BOOST
         OUTPUT_VARIABLE BREW_BOOST_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -82,11 +82,13 @@ IF(APPLE)
     IF(BREW_BOOST EQUAL 0 AND EXISTS "${BREW_BOOST_PREFIX}")
       MESSAGE(STATUS "Found Boost installed by Homebrew at ${BREW_BOOST_PREFIX}")
       SET(BOOST_ROOT ${BREW_BOOST_PREFIX})
-      SET(Boost_LIBRARY_DIRS "${BREW_BOOST_PREFIX}/lib/")
-      # On macOS don't set manually: Boost_INCLUDE_DIR or Boost_INCLUDE_DIRS or else "openssl/ssl.h" error!!!!
-      INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+      SET(Boost_LIBRARY_DIRS ${BREW_BOOST_PREFIX}/lib/)
+      SET(Boost_INCLUDE_DIR ${BREW_BOOST_PREFIX}/include/)
+      SET(Boost_INCLUDE_DIRS ${BREW_BOOST_PREFIX}/include/)
+      MESSAGE(STATUS "Homebrew Boost_INCLUDE_DIRS used:   ${Boost_INCLUDE_DIRS}")
+      MESSAGE(STATUS "Homebrew Boost_LIBRARIES used: ${Boost_LIBRARIES}")
     ELSE()
-        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
+        MESSAGE(FATAL_ERROR "Homebrew version of Boost v1.76 not found. Install with: brew install boost@1.76")
     ENDIF()
 ENDIF(APPLE)
 
