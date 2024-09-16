@@ -160,15 +160,14 @@ Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
 Note that the binary location Python3.11 is before `/bin/:/usr/bin`)
 
-**IMPORTANT for Boost installation **:
+**NOTE for Boost installation **:
 
-Since May 2025, the Boost library was updated to v1.85 which is not compatible with SeisComP (Linux & Mac).
-Therefore we need to install Boost < 1.85. As of this writing Boost v1.76 is available with Homebrew.
+Latest upstream seiscomp is compatible with Boost v1.86, no need to install older Boost 1.76 anymore on macOS.
 
 ### Continue installing macOS dependencies with:
 
 ```
-brew install boost@1.76 
+brew install boost
 brew install cmake
 brew install fftw 
 brew install flex
