@@ -74,7 +74,7 @@ IF(WIN32)
 ENDIF(WIN32)
 
 IF(APPLE)   
-    EXECUTE_PROCESS(COMMAND brew --prefix boost@1.76
+    EXECUTE_PROCESS(COMMAND brew --prefix boost
         RESULT_VARIABLE BREW_BOOST
         OUTPUT_VARIABLE BREW_BOOST_PREFIX
         OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -88,7 +88,7 @@ IF(APPLE)
       MESSAGE(STATUS "Homebrew Boost_INCLUDE_DIRS used:   ${Boost_INCLUDE_DIRS}")
       MESSAGE(STATUS "Homebrew Boost_LIBRARIES used: ${Boost_LIBRARIES}")
     ELSE()
-        MESSAGE(FATAL_ERROR "Homebrew version of Boost v1.76 not found. Install with: brew install boost@1.76")
+        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
     ENDIF()
 ENDIF(APPLE)
 
