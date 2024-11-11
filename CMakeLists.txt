@@ -395,21 +395,23 @@ ADD_DEFINITIONS(
 	-DSHARED_MODULE_SUFFIX="${CMAKE_SHARED_MODULE_SUFFIX}"
  )
 
-# Helper for Eclipse CDT
-#
-IF (CMAKE_COMPILER_IS_GNUCC)
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
-IF (CMAKE_COMPILER_IS_GNUCXX)
-	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
-		MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
-7.0.0 is required for C++17 language features.")
-	ENDIF ()
-
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-
-ADD_DEFINITIONS(-D_REENTRANT)
+IF (NOT APPLE)
+    # Helper for Eclipse CDT
+    #
+    IF (CMAKE_COMPILER_IS_GNUCC)
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
+    IF (CMAKE_COMPILER_IS_GNUCXX)
+        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
+            MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
+    7.0.0 is required for C++17 language features.")
+        ENDIF ()
+    
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
+    ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+    
+    ADD_DEFINITIONS(-D_REENTRANT)
+ENDIF(NOT APPLE)
 
 IF(SC_GLOBAL_UNITTESTS)
 	MESSAGE(STATUS "Enable unit tests")
