@@ -193,10 +193,47 @@ IF(SC_GLOBAL_GUI)
 		MESSAGE(FATAL_ERROR "Qt5 and Qt6 are enabled, please decide for one of them")
 	ENDIF()
 	IF(SC_GLOBAL_GUI_QT5)
+	IF(APPLE)
+        EXECUTE_PROCESS(COMMAND brew --prefix qt@5
+            RESULT_VARIABLE BREW_Qt5
+            OUTPUT_VARIABLE BREW_Qt5_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        IF(BREW_Qt5 EQUAL 0 AND EXISTS "${BREW_Qt5_PREFIX}")
+            MESSAGE(STATUS "Found Qt5 installed by Homebrew at ${BREW_Qt5_PREFIX}")
+            SET(Qt5_DIR "${BREW_Qt5_PREFIX}/lib/cmake/Qt5")
+            SET(Qt5_INCLUDE_DIR "${BREW_Qt5_PREFIX}/include/")
+            MESSAGE(STATUS "Homebrew Qt5_INCLUDE_DIR = ${Qt5_INCLUDE_DIR}")
+            INCLUDE_DIRECTORIES(${Qt5_INCLUDE_DIR})
+        ELSE()
+            MESSAGE(STATUS"Homebrew version of Qt5 not found!")
+            MESSAGE(FATAL_ERROR "Install with: brew install qt5")
+        ENDIF()
+    ENDIF(APPLE)
+
 		FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Widgets)
 		MESSAGE(STATUS "Use Qt5")
 	ENDIF()
+	
 	IF(SC_GLOBAL_GUI_QT6)
+	IF(APPLE)
+        EXECUTE_PROCESS(COMMAND brew --prefix qt@6
+            RESULT_VARIABLE BREW_Qt6
+            OUTPUT_VARIABLE BREW_Qt6_PREFIX
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        IF(BREW_Qt6 EQUAL 0 AND EXISTS "${BREW_Qt6_PREFIX}")
+            MESSAGE(STATUS "Found latest Qt6 installed by Homebrew at ${BREW_Qt6_PREFIX}")
+            SET(Qt6_DIR "${BREW_Qt6_PREFIX}/lib/cmake/Qt6")
+            SET(Qt6_INCLUDE_DIR "${BREW_Qt6_PREFIX}/include/")
+            MESSAGE(STATUS "Homebrew Qt6_INCLUDE_DIR = ${Qt6_INCLUDE_DIR}")
+            INCLUDE_DIRECTORIES(${Qt6_INCLUDE_DIR})
+        ELSE()
+            MESSAGE(STATUS"Homebrew version of Qt6 not found!")
+            MESSAGE(FATAL_ERROR "Install with: brew install qt")
+        ENDIF()
+    ENDIF(APPLE)
+
 		FIND_PACKAGE(Qt6 REQUIRED COMPONENTS Core Widgets)
 		MESSAGE(STATUS "Use Qt6")
 	ENDIF()
