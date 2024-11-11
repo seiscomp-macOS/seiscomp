@@ -34,18 +34,99 @@ OPTION(SC_ENABLE_CONTRIB "Enables descending into the contrib directory" ON)
 # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
 OPTION(FORCE_CXX11_ABI_0 "Option description" OFF)
 
-SET(PythonInterp_FIND_VERSION 3)
-SET(PythonInterp_FIND_VERSION_MAJOR 3)
-SET(PythonInterp_FIND_VERSION_EXACT 0)
-    IF(APPLE)
 
-		MESSAGE(STATUS "PYTHON_EXECUTABLE used: 	${PYTHON_EXECUTABLE}")
-		MESSAGE(STATUS "PYTHON_LIBRARIES used: 	${PYTHON_LIBRARIES}")
-		MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:${PYTHON_INCLUDE_PATH}")
-		MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
+IF(APPLE)
+    # IMPORTANT: Set Python3_FIND_STRATEGY to LOCATION so it will search for the given version number first
+    # if Python3_ROOT_DIR is set.
+    # helps to set the python version which is desired instead of the latest Python3 version (e.g. Python 3.12)
+    SET(Python3_FIND_STRATEGY LOCATION)
+    
+    # On macOS if user has set exact Python_VERSION_REQUIRED var with e.g: -DPython_VERSION_REQUIRED=3.10
+    IF(Python_VERSION_REQUIRED)
+        # macOS: check Homebrew version of Python_VERSION_REQUIRED:
+        EXECUTE_PROCESS(
+            COMMAND brew --prefix python@${Python_VERSION_REQUIRED}
+                RESULT_VARIABLE BREW_PYTHON
+                OUTPUT_VARIABLE BREW_PYTHON_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    ELSE()
+        # macOS: check Homebrew version of Python to be 3 by default, so finding most recent installed:
+        EXECUTE_PROCESS(
+            COMMAND  brew --prefix python@3
+                RESULT_VARIABLE BREW_PYTHON
+                OUTPUT_VARIABLE BREW_PYTHON_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    ENDIF()
 
-	ENDIF(APPLE)
-ENDIF(SC_GLOBAL_PYTHON_WRAPPER)
+    # If the desired python version (or the most recent if no version given) is installed with Homebrew, then continue, otherwise throw error
+    IF(BREW_PYTHON EQUAL 0 AND EXISTS "${BREW_PYTHON_PREFIX}")
+        
+        # First search for python to consider
+        IF(Python_VERSION_REQUIRED)	
+            MESSAGE(STATUS "FIRST SEARCH: Finding Python@${Python_VERSION_REQUIRED} installed by Homebrew")
+            FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT REQUIRED COMPONENTS Interpreter Development)
+            MESSAGE(STATUS "-----")
+        ELSE()
+            MESSAGE(STATUS "FIRST SEARCH: Finding Python3 installed by Homebrew")
+            FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
+            MESSAGE(STATUS "-----")
+        ENDIF()
+
+        # Check if virtual environment exists & if not, install it and install numpy/Twisted/python-dateutil in it
+        EXECUTE_PROCESS(
+            COMMAND  ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/python --version
+                RESULT_VARIABLE VENV_PYTHON
+                OUTPUT_VARIABLE VENV_PYTHON_VERSION_STRING
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        IF(VENV_PYTHON EQUAL 0 AND EXISTS "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Found Python venv of version ${VENV_PYTHON_VERSION_STRING} installed in ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            MESSAGE(STATUS "USING THIS VIRTUAL ENVIRONMENT FOR COMPILATION")
+            MESSAGE(STATUS "-----")
+        ELSE()
+            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Installing Python3 venv in ${CMAKE_INSTALL_PREFIX}/.pyenvSC, including numpy/Twisted/python-dateutil packages")	
+            EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE} -m venv ${CMAKE_INSTALL_PREFIX}/.pyenvSC)
+            EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip3 install numpy Twisted python-dateutil)
+            MESSAGE(STATUS "-----")
+        ENDIF()
+
+        # Set Python3_ROOT_DIR to virtual environment, set to find virtual environment first and unset Python3_EXECUTABLE before finding again the package
+        SET(Python3_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+        SET(ENV{VIRTUAL_ENV} "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+        SET(Python3_FIND_VIRTUALENV FIRST)
+        UNSET (Python3_EXECUTABLE)
+
+        # Look again for Python3 package with virtual environment set up
+        IF(Python_VERSION_REQUIRED)	
+            #MESSAGE(STATUS "Found Python@${Python_VERSION_REQUIRED} installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT REQUIRED COMPONENTS Interpreter Development)
+        ELSE()
+            #MESSAGE(STATUS "Found Python3 installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
+        ENDIF()
+
+    ELSE()
+        MESSAGE(STATUS "Homebrew Python3 not found.")
+        IF(Python_VERSION_REQUIRED)		
+            MESSAGE(FATAL_ERROR "Install with: brew install python@${Python_VERSION_REQUIRED}")
+        ELSE()
+            MESSAGE(FATAL_ERROR "Install with: brew install python@3")
+        ENDIF()	
+    ENDIF()
+
+    SET(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
+    SET(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+    SET(PYTHON_INCLUDE_DIR ${Python3_INCLUDE_DIRS})
+    SET(PYTHON_INCLUDE_PATH ${Python3_INCLUDE_DIRS})
+    MESSAGE(STATUS "-----")
+    MESSAGE(STATUS "PYTHON_EXECUTABLE used:     ${PYTHON_EXECUTABLE}")
+    MESSAGE(STATUS "PYTHON_LIBRARIES used: 	    ${PYTHON_LIBRARIES}")
+    MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:   ${PYTHON_INCLUDE_PATH}")
+    MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
+    MESSAGE(STATUS "-----")
+ENDIF(APPLE)
 
 
 IF(NOT APPLE)
