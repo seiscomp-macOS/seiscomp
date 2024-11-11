@@ -279,10 +279,52 @@ ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
  	SET (LINUX 1)
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
+IF (NOT APPLE)
+    # If gcc is installed add -wall and -pedantic to the commandline
+    #
+    IF (CMAKE_COMPILER_IS_GNUCC)
+        IF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+            ADD_DEFINITIONS(-Wall -pedantic -Wno-long-long -Wno-variadic-macros)
+            #ADD_DEFINITIONS(-Wall -Wno-long-long -Wno-variadic-macros)
+        ELSE ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+            ADD_DEFINITIONS(-Wall)
+        ENDIF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+    
+        # Query gcc version. We can't use CMAKE_CXX_COMPILER_VERSION which is
+        # only supported in cmake >= 2.8.10. SLES 11 still comes with cmake 2.6.
+        EXECUTE_PROCESS(
+            COMMAND ${CMAKE_C_COMPILER} -dumpversion
+            OUTPUT_VARIABLE GCC_VERSION
+        )
+    
+        STRING(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
+        LIST(LENGTH GCC_VERSION_COMPONENTS GCC_VERSION_COMPONENTS_SIZE)
+        LIST(GET GCC_VERSION_COMPONENTS 0 GCC_VERSION_MAJOR)
+        # E.g. Fedora 26 does by default report only the major version number (7)
+        # The new option "-dumpfullversion" is not available on older compilers
+        IF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+            LIST(GET GCC_VERSION_COMPONENTS 1 GCC_VERSION_MINOR)
+        ELSE(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+            SET(GCC_VERSION_MINOR 0)
+        ENDIF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+    
+        MESSAGE(STATUS "Found GCC version ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}")
+    
+        # Enable C++17 features
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    
+        # Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
+        # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
+        IF ( FORCE_CXX11_ABI_0 )
+            ADD_COMPILE_DEFINITIONS(_GLIBCXX_USE_CXX11_ABI=0)
+        ENDIF ()
+    ENDIF (CMAKE_COMPILER_IS_GNUCC)
+ENDIF(NOT APPLE)
+
 IF(APPLE)
     # Set macOS clang C & C++ compiler flags - works for both Mac Apple Silicon & Mac INTEL
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -Wno-everything -Wno-implicit-function-declaration")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-everything")
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
     
     # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
     SET(CMAKE_FIND_FRAMEWORK LAST)
