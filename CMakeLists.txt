@@ -144,25 +144,34 @@ EXEC_PROGRAM(
 
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	IF(APPLE)
-	    # macOS: find Homebrew version of NumPy
-        EXECUTE_PROCESS(COMMAND brew --prefix numpy
-	        RESULT_VARIABLE BREW_NUMPY
-	        OUTPUT_VARIABLE BREW_NUMPY_PREFIX
-	        OUTPUT_STRIP_TRAILING_WHITESPACE
-	    )
+	    # macOS: find specific Python_Version version of NumPy
+        IF(Python_VERSION_REQUIRED)	
+			# Check for numpy installation in virtual environment for SeisComP
+			EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip${Python_VERSION_REQUIRED} show numpy
+	    	RESULT_VARIABLE EXIT_CODE
+	    	    OUTPUT_QUIET
+	    	)
+		ELSE()
+			# Check for numpy installation in virtual environment for SeisComP
+			EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip3 show numpy
+			RESULT_VARIABLE EXIT_CODE
+				OUTPUT_QUIET
+			)
+		ENDIF()
 		
-	IF(BREW_NUMPY EQUAL 0 AND EXISTS "${BREW_NUMPY_PREFIX}")
-	    MESSAGE(STATUS "Found NumPy installed by Homebrew at ${BREW_NUMPY_PREFIX}")
-	    # Since cmake v3.14 can find component NumPy from Python3, which will not use cmake/FindNumpy.cmake but rather CMake's internal module FindPython3)
-		# Note that you need to manually install NumPy site-package with command: "pip3 install numpy"
-		FIND_PACKAGE(Python3 COMPONENTS NumPy)
-		SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
-		MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
-	ELSE()
-	    MESSAGE(STATUS"Homebrew version of NumPy not found!")
-        MESSAGE(FATAL_ERROR "Install with: brew install numpy; pip3 install numpy")
-    ENDIF()		
-
+		IF (${EXIT_CODE} EQUAL 0)
+			IF(Python_VERSION_REQUIRED)	
+				FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT COMPONENTS NumPy)
+				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+			ELSE()
+				FIND_PACKAGE(Python3 COMPONENTS NumPy)
+				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+			ENDIF()
+			MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
+			MESSAGE(STATUS "-----")
+		ELSE()
+			MESSAGE(FATAL_ERROR "NumPy not installed. Install with following commands: brew install python; brew install numpy; pip3 install numpy")	
+		ENDIF()
 	ELSE()
 		FIND_PACKAGE(Numpy)	
 	ENDIF(APPLE)
