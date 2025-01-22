@@ -14,21 +14,38 @@
 #  * added REQUIRED and QUIETLY check
 #  * search for mysql/mysql.h instead of just mysql.h 
 IF(APPLE)
-  # macOS: find Homebrew version of MySQL
-  EXECUTE_PROCESS(COMMAND brew --prefix mysql
+    EXECUTE_PROCESS(COMMAND brew --prefix mysql
 	  RESULT_VARIABLE BREW_MYSQL
 	  OUTPUT_VARIABLE BREW_MYSQL_PREFIX
 	  OUTPUT_STRIP_TRAILING_WHITESPACE
 	)
-	
-	IF(BREW_MYSQL EQUAL 0 AND EXISTS "${BREW_MYSQL_PREFIX}")
+    
+    IF(BREW_MYSQL EQUAL 0 AND EXISTS "${BREW_MYSQL_PREFIX}")
 	    MESSAGE(STATUS "Found MySQL installed by Homebrew at ${BREW_MYSQL_PREFIX}")
 	    SET(MySQL_DIR ${BREW_MYSQL_PREFIX})
 	    SET(MYSQL_INCLUDE_DIR ${BREW_MYSQL_PREFIX}/include)
 	    SET(MYSQL_LIBRARIES ${BREW_MYSQL_PREFIX}/lib/libmysqlclient.dylib)
 	ELSE()
-        MESSAGE(FATAL_ERROR "Homebrew version of MySQL not found. Install with: brew install mysql")
-    ENDIF()		
+    	# macOS: Some user(s) prefer MariaDB over MySQL
+        # find Homebrew version of MariaDB (an open-source drop-in replacement of MySQL)
+	    EXECUTE_PROCESS(COMMAND brew --prefix mariadb
+	        RESULT_VARIABLE BREW_MARIADB
+	        OUTPUT_VARIABLE BREW_MARIADB_PREFIX
+	        OUTPUT_STRIP_TRAILING_WHITESPACE
+	    )
+
+	    IF(BREW_MARIADB EQUAL 0 AND EXISTS "${BREW_MARIADB_PREFIX}")
+            MESSAGE(STATUS "Found MariaDB/MySQL installed by Homebrew at ${BREW_MYSQL_PREFIX}")
+	        SET(MySQL_DIR ${BREW_MARIADB_PREFIX})
+	        SET(MYSQL_INCLUDE_DIR ${BREW_MARIADB_PREFIX}/include)
+	        SET(MYSQL_LIBRARIES ${BREW_MARIADB_PREFIX}/lib/libmysqlclient.dylib)    
+        ELSE()
+            MESSAGE(WARNING "Homebrew version of MariaDB or MySQL not found.")
+            MESSAGE(WARNING "Either install MariaDB or MySQL, but not both together, with command:")
+            MESSAGE(WARNING "brew install mysql or brew install mariadb")
+            MESSAGE(FATAL_ERROR "Homebrew MySQL/MariaDB not found.")
+        ENDIF()
+    ENDIF()
 ENDIF(APPLE)
 				
 if(MYSQL_INCLUDE_DIR AND MYSQL_LIBRARIES)
