@@ -118,7 +118,13 @@ the default configuration.
 ### macOS Prerequisites
 
 This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon architectures (M1, M2, M3).
-Tested on macOS Ventura 13.x and Sonoma 14.x on Mac INTEL and Mac Silicon.
+Tested on Mac INTEL and Mac Silicon with:
+- macOS Ventura 13.x
+- macOS Sonoma 14.x and
+- macOS Sequoia 15.4. 
+
+Note: macOS Sequoia 15.4 and later is recommended since it comes with clang v17.
+
 
 - Install Xcode Development Tools
 
@@ -138,14 +144,14 @@ Install Homebrew 'brew' command with the following one-liner:
 On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
 On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
 
-Python 3.11 is recommended since Python 3.12 has compatibility issues with seedlink.
+Python 3.12 and Python 3.13 work and are recommended.
 
-First install Python v3.11 with NumPy, which needs to be installed as a site-package with pip3.
+First install Python v3.12 or 3.13 with NumPy, which needs to be installed as a site-package with pip3.
 
 ```
-brew install python@3.11
+brew install python@3.13
 brew install numpy
-pip3.11 install numpy
+pip3.13 install numpy
 ```
 
 Continue installing macOS dependencies with:
