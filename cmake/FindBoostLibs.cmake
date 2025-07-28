@@ -119,6 +119,26 @@ FIND_PATH(BOOST_INCLUDE_DIR NAMES boost/config.hpp PATH_SUFFIXES ${SUFFIX_FOR_PA
 # Assume we didn't find it.
 SET(BOOST_FOUND 0)
 
+IF(APPLE)   
+    EXECUTE_PROCESS(COMMAND brew --prefix boost
+        RESULT_VARIABLE BREW_BOOST
+        OUTPUT_VARIABLE BREW_BOOST_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF(BREW_BOOST EQUAL 0 AND EXISTS "${BREW_BOOST_PREFIX}")
+      SET(Boost_FOUND TRUE)
+      MESSAGE(STATUS "Found Boost installed by Homebrew at ${BREW_BOOST_PREFIX}")
+      SET(BOOST_ROOT ${BREW_BOOST_PREFIX})
+      SET(Boost_LIBRARY_DIRS ${BREW_BOOST_PREFIX}/lib/)
+      SET(Boost_INCLUDE_DIR ${BREW_BOOST_PREFIX}/include/)
+      SET(Boost_INCLUDE_DIRS ${BREW_BOOST_PREFIX}/include/)
+      MESSAGE(STATUS "Homebrew Boost_INCLUDE_DIRS used:   ${Boost_INCLUDE_DIRS}")
+      MESSAGE(STATUS "Homebrew Boost_LIBRARIES used: ${Boost_LIBRARIES}")
+    ELSE()
+        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
+    ENDIF()
+ENDIF(APPLE)
+
 
 MACRO(FIND_BOOST_LIBRARY _target _name)
     FIND_LIBRARY(
