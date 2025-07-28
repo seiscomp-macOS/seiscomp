@@ -168,7 +168,7 @@ brew install ncurses
 brew install openssl
 brew install qt5
 brew install swig
-brew install libmongoc ## for bson
+brew install mongo-c-driver@1 ## for bson-1.0
 ```
 
 Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
