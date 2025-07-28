@@ -322,9 +322,32 @@ IF (NOT APPLE)
 ENDIF(NOT APPLE)
 
 IF(APPLE)
-    # Set macOS clang C & C++ compiler flags - works for both Mac Apple Silicon & Mac INTEL
-    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    #SET(CMAKE_VERBOSE_MAKEFILE 1)
+    # Check Mac architecture: arm64 (Apple Silicon) or x86_64 Mac INTEL
+	EXECUTE_PROCESS(COMMAND uname -m 
+	    OUTPUT_VARIABLE CMAKE_OSX_ARCHITECTURES
+	    OUTPUT_STRIP_TRAILING_WHITESPACE
+	)
+	IF(${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64" )
+		  MESSAGE(STATUS "Detected Apple Silicon arm64 architecture")
+		  SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Apple Silicon Architectures")
+		  SET(MACOS_HOMEBREW_PATH "/opt/homebrew/")
+  		  SET(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
+          # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
+		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -arch arm64")
+		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -arch arm64")
+	ELSEIF(${CMAKE_OSX_ARCHITECTURES} MATCHES "x86_64")
+		  MESSAGE(STATUS "Detected Apple INTEL x86_64 architecture")
+		  SET(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Apple INTEL Architectures")
+		  SET(MACOS_HOMEBREW_PATH "/usr/local/")
+	  	  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "")
+	  	  # For Clang's C-compiler add "-Wno-implicit-function-declaration" to avoid compile error (seedlink plugin locsat)
+		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -arch x86_64")
+		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -arch x86_64")
+	ELSE()
+		 MESSAGE(FATAL_ERROR "Unknown macOS architecture found!")
+	ENDIF()
+
     
     # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
     SET(CMAKE_FIND_FRAMEWORK LAST)
