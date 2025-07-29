@@ -74,36 +74,39 @@ IF(APPLE)
             MESSAGE(STATUS "-----")
         ENDIF()
 
+        # Define the PYTHON3_VIRTUAL_ENVIRONMENT
+        SET(PYTHON3_VIRTUAL_ENVIRONMENT_PATH "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+
         # Check if virtual environment exists & if not, install it and install numpy/Twisted/python-dateutil in it
         EXECUTE_PROCESS(
-            COMMAND  ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/python --version
+            COMMAND  ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}/bin/python --version
                 RESULT_VARIABLE VENV_PYTHON
                 OUTPUT_VARIABLE VENV_PYTHON_VERSION_STRING
                 OUTPUT_STRIP_TRAILING_WHITESPACE
         )
-        IF(VENV_PYTHON EQUAL 0 AND EXISTS "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
-            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Found Python venv of version ${VENV_PYTHON_VERSION_STRING} installed in ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+        IF(VENV_PYTHON EQUAL 0 AND EXISTS "${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
+            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Found Python venv of version ${VENV_PYTHON_VERSION_STRING} installed in ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
             MESSAGE(STATUS "USING THIS VIRTUAL ENVIRONMENT FOR COMPILATION")
             MESSAGE(STATUS "-----")
         ELSE()
-            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Installing Python3 venv in ${CMAKE_INSTALL_PREFIX}/.pyenvSC, including numpy/Twisted/python-dateutil packages")	
-            EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE} -m venv ${CMAKE_INSTALL_PREFIX}/.pyenvSC)
-            EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip3 install numpy Twisted python-dateutil)
+            MESSAGE(STATUS "VIRTUAL ENVIRONMENT: Installing Python3 venv in ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}, including numpy/Twisted/python-dateutil packages")	
+            EXECUTE_PROCESS(COMMAND ${Python3_EXECUTABLE} -m venv ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH})
+            EXECUTE_PROCESS(COMMAND ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}/bin/pip3 install numpy Twisted python-dateutil)
             MESSAGE(STATUS "-----")
         ENDIF()
 
         # Set Python3_ROOT_DIR to virtual environment, set to find virtual environment first and unset Python3_EXECUTABLE before finding again the package
-        SET(Python3_ROOT_DIR "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
-        SET(ENV{VIRTUAL_ENV} "${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+        SET(Python3_ROOT_DIR "${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
+        SET(ENV{VIRTUAL_ENV} "${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
         SET(Python3_FIND_VIRTUALENV FIRST)
-        UNSET (Python3_EXECUTABLE)
+        UNSET(Python3_EXECUTABLE)
 
         # Look again for Python3 package with virtual environment set up
         IF(Python_VERSION_REQUIRED)	
-            #MESSAGE(STATUS "Found Python@${Python_VERSION_REQUIRED} installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            #MESSAGE(STATUS "Found Python@${Python_VERSION_REQUIRED} installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
             FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT REQUIRED COMPONENTS Interpreter Development)
         ELSE()
-            #MESSAGE(STATUS "Found Python3 installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${CMAKE_INSTALL_PREFIX}/.pyenvSC")
+            #MESSAGE(STATUS "Found Python3 installed by Homebrew at ${BREW_PYTHON_PREFIX} with venv at ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}")
             FIND_PACKAGE(Python3 REQUIRED COMPONENTS Interpreter Development)
         ENDIF()
 
@@ -147,13 +150,13 @@ IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	    # macOS: find specific Python_Version version of NumPy
         IF(Python_VERSION_REQUIRED)	
 			# Check for numpy installation in virtual environment for SeisComP
-			EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip${Python_VERSION_REQUIRED} show numpy
+			EXECUTE_PROCESS(COMMAND ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}/bin/pip${Python_VERSION_REQUIRED} show numpy
 	    	RESULT_VARIABLE EXIT_CODE
 	    	    OUTPUT_QUIET
 	    	)
 		ELSE()
 			# Check for numpy installation in virtual environment for SeisComP
-			EXECUTE_PROCESS(COMMAND ${CMAKE_INSTALL_PREFIX}/.pyenvSC/bin/pip3 show numpy
+			EXECUTE_PROCESS(COMMAND ${PYTHON3_VIRTUAL_ENVIRONMENT_PATH}/bin/pip3 show numpy
 			RESULT_VARIABLE EXIT_CODE
 				OUTPUT_QUIET
 			)
