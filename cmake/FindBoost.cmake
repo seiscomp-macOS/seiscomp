@@ -73,26 +73,7 @@ IF(WIN32)
   SET(Boost_LIB_DIAGNOSTIC_DEFINITIONS "-DBOOST_LIB_DIAGNOSTIC")
 ENDIF(WIN32)
 
-IF(APPLE)   
-    EXECUTE_PROCESS(COMMAND brew --prefix boost
-        RESULT_VARIABLE BREW_BOOST
-        OUTPUT_VARIABLE BREW_BOOST_PREFIX
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    IF(BREW_BOOST EQUAL 0 AND EXISTS "${BREW_BOOST_PREFIX}")
-      SET(Boost_FOUND TRUE)
-      MESSAGE(STATUS "Found Boost installed by Homebrew at ${BREW_BOOST_PREFIX}")
-      SET(BOOST_ROOT ${BREW_BOOST_PREFIX})
-      SET(Boost_LIBRARY_DIRS ${BREW_BOOST_PREFIX}/lib/)
-      SET(Boost_INCLUDE_DIR ${BREW_BOOST_PREFIX}/include/)
-      SET(Boost_INCLUDE_DIRS ${BREW_BOOST_PREFIX}/include/)
-      MESSAGE(STATUS "Homebrew Boost_INCLUDE_DIRS used:   ${Boost_INCLUDE_DIRS}")
-      MESSAGE(STATUS "Homebrew Boost_LIBRARIES used: ${Boost_LIBRARIES}")
-    ELSE()
-        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
-    ENDIF()
-ENDIF(APPLE)
-
+IF(NOT APPLE)
 SET(BOOST_INCLUDE_PATH_DESCRIPTION "directory containing the boost include files. E.g /usr/local/include/boost-1_33_1 or c:\\boost\\include\\boost-1_33_1")
 
 SET(BOOST_DIR_MESSAGE "Set the Boost_INCLUDE_DIR cmake cache entry to the ${BOOST_INCLUDE_PATH_DESCRIPTION}")
@@ -102,6 +83,7 @@ IF(BOOST_DIR_SEARCH)
   FILE(TO_CMAKE_PATH ${BOOST_DIR_SEARCH} BOOST_DIR_SEARCH)
   SET(BOOST_DIR_SEARCH ${BOOST_DIR_SEARCH}/include)
 ENDIF(BOOST_DIR_SEARCH)
+ENDIF(NOT APPLE)
 
 IF(WIN32)
   SET(BOOST_DIR_SEARCH
@@ -111,6 +93,7 @@ IF(WIN32)
   )
 ENDIF(WIN32)
 
+IF(NOT APPLE)
 # Add in some path suffixes. These will have to be updated whenever a new Boost version comes out.
 SET(SUFFIX_FOR_PATH
  boost-1_35_1
@@ -134,9 +117,30 @@ FIND_PATH(Boost_INCLUDE_DIR NAMES boost/config.hpp PATH_SUFFIXES ${SUFFIX_FOR_PA
   # Help the user find it if we cannot.
   DOC "The ${BOOST_INCLUDE_PATH_DESCRIPTION}"
 )
+ENDIF(NOT APPLE)
 
 # Assume we didn't find it.
 SET(Boost_FOUND 0)
+
+IF(APPLE)   
+    EXECUTE_PROCESS(COMMAND brew --prefix boost
+        RESULT_VARIABLE BREW_BOOST
+        OUTPUT_VARIABLE BREW_BOOST_PREFIX
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    IF(BREW_BOOST EQUAL 0 AND EXISTS "${BREW_BOOST_PREFIX}")
+      SET(Boost_FOUND TRUE)
+      MESSAGE(STATUS "Found Boost installed by Homebrew at ${BREW_BOOST_PREFIX}")
+      SET(BOOST_ROOT ${BREW_BOOST_PREFIX})
+      SET(Boost_LIBRARY_DIRS ${BREW_BOOST_PREFIX}/lib/)
+      SET(Boost_INCLUDE_DIR ${BREW_BOOST_PREFIX}/include/)
+      SET(Boost_INCLUDE_DIRS ${BREW_BOOST_PREFIX}/include/)
+      MESSAGE(STATUS "Homebrew Boost_INCLUDE_DIRS used:   ${Boost_INCLUDE_DIRS}")
+      MESSAGE(STATUS "Homebrew Boost_LIBRARIES used: ${Boost_LIBRARIES}")
+    ELSE()
+        MESSAGE(FATAL_ERROR "Homebrew version of Boost not found. Install with: brew install boost")
+    ENDIF()
+ENDIF(APPLE)
 
 # Now try to get the include and library path.
 IF(Boost_INCLUDE_DIR)
