@@ -185,8 +185,8 @@ SET(PYTHON_LIBRARY_SUFFIX /python)
 SET(PYTHON_LIBRARY_PATH lib${PYTHON_LIBRARY_SUFFIX})
 
 OPTION(SC_GLOBAL_GUI "Build graphical user interfaces (requires Qt5 or Qt6)" ON)
-OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" ON)
-OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" OFF)
+OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" OFF)
+OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" ON)
 
 IF(SC_GLOBAL_GUI)
 	IF((NOT SC_GLOBAL_GUI_QT5) AND (NOT SC_GLOBAL_GUI_QT6))
