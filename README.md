@@ -166,7 +166,7 @@ brew install hdf5
 brew install mysql #mariadb can also be installed as an alternative
 brew install ncurses
 brew install openssl
-brew install qt5
+brew install qt # installs version Qt6 (use qt@5 for Qt5)
 brew install swig
 brew install mongo-c-driver@1 ## for bson-1.0
 ```
