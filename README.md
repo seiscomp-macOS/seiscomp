@@ -69,7 +69,7 @@ git clone $repo_path/contrib-ipgp.git
 git clone $repo_path/contrib-sed.git
 
 echo "Cloning SeisComP MeRT repo into ${target_dir}/src/base/extras/"
-/bin/cd "${target_dir}/src/extras/" 
+cd ../extras/ 
 git clone $repo_path/scmert.git
 
 echo "Done cloning seiscomp-macOS"
@@ -225,11 +225,11 @@ Still inside `~/Downloads/seiscomp-macos` do the following:
 ```
 mkdir build-seiscomp
 cd build-seiscomp
-cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
+cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp-macOS
 ```
 
 Note 1: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
-`cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
+`cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp-macOS/ -DPython_VERSION_REQUIRED=3.10`
 
 Compile SeisComP for macOS in the `build-seiscomp` directory:
 
