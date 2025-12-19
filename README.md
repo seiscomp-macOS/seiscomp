@@ -121,9 +121,9 @@ This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon a
 Tested on Mac INTEL and Mac Silicon with:
 - macOS Ventura 13.x
 - macOS Sonoma 14.x and
-- macOS Sequoia 15.4. 
+- macOS Sequoia 15.7.x 
 
-Note: macOS Sequoia 15.4 and later is recommended since it comes with clang v17.
+Note: macOS Sequoia 15.6 and later is recommended since it comes with clang v17.
 
 
 - Install Xcode Development Tools
@@ -146,10 +146,13 @@ On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebr
 
 Python 3.12 and Python 3.13 work and are recommended.
 
-First install Python v3.12 or 3.13 with NumPy, which needs to be installed as a site-package with pip3.
+First install Homebrew's Python v3.x, which installs NumPy too.
+
+`brew install python@3`
+
+If you need to NumPy manually, use one of the following:
 
 ```
-brew install python@3.13
 brew install numpy
 pip3.13 install numpy
 ```
@@ -159,17 +162,15 @@ Continue installing macOS dependencies with:
 ```
 brew install boost 
 brew install cmake
-brew install fftw 
-brew install flex
 brew install gfortran
-brew install hdf5
-brew install mysql #mariadb can also be installed as an alternative
+brew install mariadb #mysql can also be installed as an alternative
 brew install ncurses
 brew install openssl
 brew install qt # installs version Qt6 (use qt@5 for Qt5)
-brew install swig
-brew install mongo-c-driver@1 ## for bson-1.0
+brew install coreutils # for GNU date - gdate
 ```
+
+Note: hdf5, flex (uses macOS system flex lib), fftw, mongo-c-driver@1 and swig are not required to compile.
 
 Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
 
