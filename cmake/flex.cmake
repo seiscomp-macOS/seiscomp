@@ -1,6 +1,11 @@
 # flex a .l file
 
 IF(APPLE)
+    IF (EXISTS "/Library/Developer/CommandLineTools/usr/include/FlexLexer.h" )
+        SET(FLEX_INCLUDE_DIR "/Library/Developer/CommandLineTools/usr/include/")
+        INCLUDE_DIRECTORIES(${FLEX_INCLUDE_DIR})
+    ELSE()
+        MESSAGE(STATUS,"macOS default /Library/Developer/CommandLineTools/usr/include/FlexLexer.h not found! Checking Homebrew version of flex.")
 		EXECUTE_PROCESS(COMMAND brew --prefix flex
 			RESULT_VARIABLE BREW_FLEX
 			OUTPUT_VARIABLE BREW_FLEX_PREFIX
@@ -14,6 +19,7 @@ IF(APPLE)
 		ELSE()
 			MESSAGE(FATAL_ERROR "Homebrew version of flex not found! Install with: brew install flex")
 		ENDIF()
+	ENDIF()	
 ENDIF(APPLE)
 
 # search flex
