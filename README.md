@@ -121,9 +121,7 @@ This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon a
 Tested on Mac INTEL and Mac Silicon with:
 - macOS Ventura 13.x
 - macOS Sonoma 14.x and
-- macOS Sequoia 15.7.x 
-
-Note: macOS Sequoia 15.6 and later is recommended since it comes with clang v17.
+- macOS Sequoia 15.7.x (recommended since it comes with updated clang v17)
 
 
 - Install Xcode Development Tools
@@ -144,18 +142,22 @@ Install Homebrew 'brew' command with the following one-liner:
 On INTEL Mac the default Homebrew directory location is in: `/usr/local/`
 On Apple Silicon Mac the default Homebrew directory location is in: `/opt/homebrew/opt/`
 
-Python 3.12 and Python 3.13 work and are recommended.
-
-First install Homebrew's Python v3.x, which installs NumPy too.
+First install Homebrew's Python v3.x, which installs automatically NumPy.
+Python 3.12 to 3.14 work and are recommended.
 
 `brew install python@3`
 
-If you need to NumPy manually, use one of the following:
+If you need to install NumPy manually, use one of the following:
 
 ```
 brew install numpy
 pip3.13 install numpy
 ```
+
+Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
+`brew install python@3.10`
+`pip3.10 install numpy`
+
 
 Continue installing macOS dependencies with:
 
@@ -171,17 +173,28 @@ brew install coreutils # for GNU date - gdate
 ```
 
 Note: hdf5, flex (uses macOS system flex lib), fftw, mongo-c-driver@1 and swig are not required to compile.
+They can be uninstalled (which also removes their dependencies with):
+```
+brew uninstall fftw
+brew uninstall flex
+brew uninstall hdf5
+brew uninstall mongo-c-driver@1
+```
 
-Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10:
 
-`brew install python@3.10`
-`pip3.10 install numpy`
+After that check or update your .bashrc PATH, which needs Homebrew's specific paths:
 
-After that check or update your PATH to include Homebrew paths:
+The Homebrew shell path for INTEL Mac are:
+- /usr/local/bin/ and
+- /usr/local/sbin 
 
-The Homebrew shell path for INTEL Mac /usr/local/bin/ and /usr/local/sbin and /opt/homebrew/bin resp. /opt/homebrew/sbin/
-should be in your PATH. Edit your `~/.bashrc` accordingly
+and for Apple Silicon Mac:
+- /opt/homebrew/bin resp.
+- /opt/homebrew/sbin/
 
+should be added to your shell (e.g. for BASH = $HOME/.bashrc PATH)
+
+Check your PATH from Terminal.app with:
 `echo $PATH`
 
 On INTEL Mac, your `~/.bashrc`should look like (note the `/usr/local/bin:/usr/local/sbin:` before `/bin/:/usr/bin`)
@@ -193,9 +206,9 @@ On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/
 `PATH=/opt/homebrew/bin:/opt/homebrew/sbin:/bin:/usr/bin:/usr/sbin:$PATH`
 
 
-### Clone the Github repositories  from https://github.com/seiscomp-macos/
+### Clone the Github seiscomp-macOS repositories from https://github.com/seiscomp-macos/
 
-Note that the script `clone_seiscomp-macos.sh` uses the repo from https://github.com/seiscomp-macos/ and not from https://github.com/seiscomp
+Note that the script `clone_seiscomp-macos.sh` uses all the repositories from https://github.com/seiscomp-macos/ and not the repositories from https://github.com/seiscomp
 Use the script  `clone_seiscomp-macos.sh` to git-clone all the repos.
 
 Here's how to proceed:
@@ -206,6 +219,7 @@ Here's how to proceed:
 mkdir ~/Downloads/seiscomp-macos
 cd ~/Downloads/seiscomp-macos
 ```
+
 Move the script `clone_seiscomp-macos.sh` to `~/Downloads/seiscomp-macos`
 
 Change script to executable - do this once:
@@ -232,11 +246,11 @@ cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
 Note 1: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
 `cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
 
-Compile SeisComP for macOS in the `build-seiscomp` directory:
+Compile SeisComP for macOS inside the `build-seiscomp` directory:
 
 `make -j4`
 
-Install with command:
+If compilation was succesful, install seiscomp-macOS with command:
 
 `make install`
 
