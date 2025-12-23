@@ -39,7 +39,7 @@ The SeisComP software collection is distributed among several repositories.
 This repository only contains the build environment, the runtime framework
 (seiscomp control script) and the documentation.
 
-To checkout all repositories to build a complete SeisComP distribution for macOS the following
+To checkout all seiscomp-macOS repositories to build a complete SeisComP distribution for macOS the following
 script can be used.
 
 Copy/paste the following content to file: `clone_seiscomp-macos.sh`
@@ -47,34 +47,42 @@ Copy/paste the following content to file: `clone_seiscomp-macos.sh`
 ```
 #!/bin/bash
 
-target_dir="seiscomp-macOS"
-repo_path=https://github.com/seiscomp-macos/
-
+repo_path="https://github.com/seiscomp-macOS"
+target_dir=${WORKDIR}/seiscomp-macOS
 WORKDIR=$(pwd)
 
-echo "Cloning seiscomp base repository into $target_dir"
+echo "Creating build-dir"
+build_dir=builds/${target_dir}
+mkdir -p ${build_dir}
+
+#------------------------------------------------------
+
+echo "Cloning seiscomp-macOS from repository ${repo_path} into ${target_dir}"
 git clone $repo_path/seiscomp.git $target_dir
 
-echo "Cloning base components"
-cd $target_dir/src/base
-git clone $repo_path/seedlink.git
-git clone $repo_path/common.git
-git clone $repo_path/main.git
-git clone $repo_path/mainx.git
-git clone $repo_path/extras.git
 
-echo "Cloning external base components"
-git clone $repo_path/contrib-gns.git
-git clone $repo_path/contrib-ipgp.git
-git clone $repo_path/contrib-sed.git
+echo "Cloning base components into ${target_dir}/src/base/"
+#cd "$target_dir/src/base/"
 
-echo "Cloning SeisComP MeRT repo into ${target_dir}/src/base/extras/"
-/bin/cd "${target_dir}/src/extras/" 
-git clone $repo_path/scmert.git
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/seedlink.git
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/common.git
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/main.git
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/mainx.git
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/extras.git
 
-echo "Done cloning seiscomp-macOS"
+echo "Cloning external base components into ${target_dir}/src/base/"
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/contrib-gns.git 
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/contrib-ipgp.git 
+/usr/bin/git -C $target_dir/src/base/ clone $repo_path/contrib-sed.git
 
-cd ../../
+echo "Cloning SeisComP MeRT repo into ${target_dir}/src/extras/"
+/usr/bin/git -C $target_dir/src/extras/ clone $repo_path/scmert.git
+
+cd "${WORKDIR}"
+
+echo "If you want to use 'mu' command from https://fabioz.github.io/mu-repo/, call 'mu register --recursive'"
+echo "To initialize the build, run 'make'."
+
 ```
 
 To keep track of the state of each subrepository, [mu-repo](http://fabioz.github.io/mu-repo/)
@@ -118,10 +126,10 @@ the default configuration.
 ### macOS Prerequisites
 
 This will compile SeisComP natively on macOS for both Mac INTEL or Mac Silicon architectures (M1, M2, M3).
-Tested on Mac INTEL and Mac Silicon with:
-- macOS Ventura 13.x
-- macOS Sonoma 14.x and
-- macOS Sequoia 15.7.x (recommended since it comes with updated clang v17)
+Latest SeisComP v7.x compiles on Mac INTEL and Mac Silicon with:
+
+- macOS Sequoia 15.7.x or later (recommended for INTEL Macs since it comes with updated clang v17.x compiler)
+- macOS Tahoe 26.x for Apple Silicon chips works too
 
 
 - Install Xcode Development Tools
@@ -162,14 +170,14 @@ Note: If you need a more specific version of Python with NumPy, e.g. Python 3.10
 Continue installing macOS dependencies with:
 
 ```
-brew install boost 
+brew install boost
 brew install cmake
+brew install coreutils # for GNU date - gdate
 brew install gfortran
 brew install mariadb #mysql can also be installed as an alternative
 brew install ncurses
 brew install openssl
 brew install qt # installs version Qt6 (use qt@5 for Qt5)
-brew install coreutils # for GNU date - gdate
 ```
 
 Note: hdf5, flex (uses macOS system flex lib), fftw, mongo-c-driver@1 and swig are not required to compile.
@@ -208,7 +216,7 @@ On Apple Silicon Mac, your `~/.bashrc`should look like (note the `/opt/homebrew/
 
 ### Clone the Github seiscomp-macOS repositories from https://github.com/seiscomp-macos/
 
-Note that the script `clone_seiscomp-macos.sh` uses all the repositories from https://github.com/seiscomp-macos/ and not the repositories from https://github.com/seiscomp
+Note that the script `clone_seiscomp-macos.sh` uses all the repositories from https://github.com/seiscomp-macos/ and not from https://github.com/seiscomp/
 Use the script  `clone_seiscomp-macos.sh` to git-clone all the repos.
 
 Here's how to proceed:
@@ -239,12 +247,11 @@ Still inside `~/Downloads/seiscomp-macos` do the following:
 
 ```
 mkdir build-seiscomp
-cd build-seiscomp
-cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp
+cmake -S seiscomp-macOS -B build-seiscomp -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp/
 ```
 
 Note 1: if you need to use a specific Python version, e.g "Python 3.10" (don't forget to set your PATH accordingly):
-`cmake -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp ../seiscomp/ -DPython_VERSION_REQUIRED=3.10`
+`cmake -S seiscomp-macOS -B build-seiscomp -DCMAKE_INSTALL_PREFIX=${HOME}/seiscomp/ -DPython_VERSION_REQUIRED=3.10`
 
 Compile SeisComP for macOS inside the `build-seiscomp` directory:
 
@@ -254,10 +261,10 @@ If compilation was succesful, install seiscomp-macOS with command:
 
 `make install`
 
-If compilation was succesful it will install the binaries and libraries in ${HOME}/seiscomp (the MAKE_INSTALL_PREFIX).
+It will install the binaries and libraries in ${HOME}/seiscomp (the MAKE_INSTALL_PREFIX).
 Launch (test) e.g 'scmv' or 'scrttv' with command:
 
-`/Users/<YOUR_USER_NAME>/seiscomp/bin/`
+`${HOME}/seiscomp/bin/`
 
 
 Note 1: After compilation the seedlink plugins directory contains compiled libraries e.g. libreftek.a libutil.a etc and objects .o
@@ -273,7 +280,7 @@ make clean
 
 ### Configure MySQL on macOS for better performance
 
-Copy default MYSQL configuration file to /etc/my.cnf with command:
+Copy default MYSQL/MariaDB configuration file to /etc/my.cnf with command:
 
 `sudo cp $(brew --prefix mysql)/support-files/my-default.cnf /etc/my.cnf`
 
