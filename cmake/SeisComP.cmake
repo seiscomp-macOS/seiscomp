@@ -66,7 +66,6 @@ MACRO (SC_ADD_VERSION _package _name)
             COMMAND bash -c "echo -n `gdate -d @\\`git log -1 --pretty=format:%at -- .\\` +%Y`"
             OUTPUT_VARIABLE BUILD_YEAR
         )
-        MESSAGE(STATUS "Gilles - BUILD_YEAR: ${BUILD_YEAR}")
         
         # Read build day from current source directory
         EXECUTE_PROCESS (
@@ -74,7 +73,6 @@ MACRO (SC_ADD_VERSION _package _name)
             COMMAND bash -c "echo -n `gdate -d @\\`git log -1 --pretty=format:%at -- .\\` +%j | sed 's/^0*//'`"
             OUTPUT_VARIABLE BUILD_DAY
         )
-        MESSAGE(STATUS "Gilles - BUILD_DAY: ${BUILD_DAY}")
         
         # Read build day from current source directory
         EXECUTE_PROCESS (
@@ -82,7 +80,6 @@ MACRO (SC_ADD_VERSION _package _name)
             COMMAND bash -c "echo -n `gdate -d @\\`git log -1 --pretty=format:%at -- .\\` +%j`"
             OUTPUT_VARIABLE BUILD_DAY_STR
         )
-        MESSAGE(STATUS "Gilles - BUILD_DAY_STR: ${BUILD_DAY_STR}")
     ELSE()
         # Read build year from current source directory
         EXECUTE_PROCESS (
