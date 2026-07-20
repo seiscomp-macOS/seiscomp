@@ -138,34 +138,16 @@ OPTION(SC_GLOBAL_PYTHON_WRAPPER "Create Python 3 wrapper" ON)
 OPTION(SC_GLOBAL_PYTHON_WRAPPER_NUMPY "Add Numpy support for Python 3 wrapper" ON)
 OPTION(SC_ENABLE_CONTRIB "Enables descending into the contrib directory" ON)
 
-IF(NOT APPLE)
-    # Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
-    # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-    OPTION(FORCE_CXX11_ABI_0 "Option description" OFF)
-
-	IF ("${CMAKE_VERSION}" VERSION_LESS 3.12)
-	    SET(PythonInterp_FIND_VERSION 3)
-	    SET(PythonInterp_FIND_VERSION_MAJOR 3)
-	    SET(PythonInterp_FIND_VERSION_EXACT 0)
-	    FIND_PACKAGE(PythonInterp)
-        ELSE ("${CMAKE_VERSION}" VERSION_LESS 3.12)
-	    FIND_PACKAGE(Python 3 REQUIRED COMPONENTS Interpreter NumPy Development)
-	    IF (NOT PYTHON_EXECUTABLE)
-		    SET(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
-	    ENDIF ()
-    ENDIF ("${CMAKE_VERSION}" VERSION_LESS 3.12)
-    EXECUTE_PROCESS(
-        COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version.split()[0])"
-        OUTPUT_VARIABLE PYTHON_VERSION
-    )
-    STRING(STRIP "${PYTHON_VERSION}" PYTHON_VERSION)
-    MESSAGE(STATUS "Python exec/version: ${PYTHON_EXECUTABLE} ${PYTHON_VERSION}")
-ENDIF()
+# Check for Python 
 
 IF(APPLE)
-    # IMPORTANT: Set Python3_FIND_STRATEGY to LOCATION so it will search for the given version number first
+    # IMPORTANT: Python3_FIND_STRATEGY requires cmake 3.15+:
+    # Set Python3_FIND_STRATEGY to LOCATION so it will search for the given version number first
     # if Python3_ROOT_DIR is set.
     # helps to set the python version which is desired instead of the latest Python3 version (e.g. Python 3.12)
+    # The Python3_FIND_STRATEGY variable can be set to one of the following:
+    # VERSION: Try to find the most recent version in all specified locations. This is the default if policy CMP0094 is undefined or set to OLD.
+    # LOCATION: Stops lookup as soon as a version satisfying version constraints is founded. This is the default if policy CMP0094 is set to NEW.
     SET(Python3_FIND_STRATEGY LOCATION)
     
     # On macOS if user has set exact Python_VERSION_REQUIRED var with e.g: -DPython_VERSION_REQUIRED=3.10
@@ -283,13 +265,17 @@ IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 		IF (${EXIT_CODE} EQUAL 0)
 			IF(Python_VERSION_REQUIRED)	
 				FIND_PACKAGE(Python3 ${Python_VERSION_REQUIRED} EXACT COMPONENTS NumPy)
-				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
 			ELSE()
 				FIND_PACKAGE(Python3 COMPONENTS NumPy)
-				SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
 			ENDIF()
-			MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
-			MESSAGE(STATUS "-----")
+			IF(Python3_NumPy_FOUND)
+			    SET(PYTHON_NUMPY_INCLUDE_DIR ${Python3_NumPy_INCLUDE_DIRS})
+			    MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
+			    MESSAGE(STATUS "Using PYTHON_NUMPY_INCLUDE_DIR: ${PYTHON_NUMPY_INCLUDE_DIR}")
+			    MESSAGE(STATUS "-----")
+            ELSE()
+       			MESSAGE(FATAL_ERROR "NumPy not installed. Install with: brew install python; brew install numpy")	
+            ENDIF()			    
 		ELSE()
 			MESSAGE(FATAL_ERROR "NumPy not installed. Install with: brew install python; brew install numpy")	
 		ENDIF()
