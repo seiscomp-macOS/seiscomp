@@ -120,6 +120,17 @@ IF (WIN32)
 ENDIF (WIN32)
 
 # Find needed packages
+IF(APPLE)
+    # Disable SeisComP custom CMake config files from CMAKE_MODULE_PATH
+    # since recent cmake has them built-in (e.g. boost, numpy, ncurses, openssl)
+    LIST(REMOVE_ITEM CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+    # Explicitly include only some required custom cmake config files
+    INCLUDE("${PROJECT_SOURCE_DIR}/cmake/flex.cmake")
+    INCLUDE("${PROJECT_SOURCE_DIR}/cmake/FindMySQL.cmake")
+    INCLUDE("${PROJECT_SOURCE_DIR}/cmake/SeisComP.cmake")
+    INCLUDE("${PROJECT_SOURCE_DIR}/cmake/FindSPREAD.cmake")
+ENDIF()
+
 FIND_PACKAGE(LibXml2 REQUIRED)
 
 OPTION(SC_GLOBAL_UNITTESTS "Enable unit tests" ON)
