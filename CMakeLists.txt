@@ -298,8 +298,9 @@ SET(PYTHON_LIBRARY_SUFFIX /python)
 SET(PYTHON_LIBRARY_PATH lib${PYTHON_LIBRARY_SUFFIX})
 
 OPTION(SC_GLOBAL_GUI "Build graphical user interfaces (requires Qt5 or Qt6)" ON)
-OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" ON)
-OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" OFF)
+OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" OFF)
+# Qt5 is deprecated - prefer Qt6
+OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" ON)
 
 IF(SC_GLOBAL_GUI)
 	IF((NOT SC_GLOBAL_GUI_QT5) AND (NOT SC_GLOBAL_GUI_QT6))
@@ -308,18 +309,52 @@ IF(SC_GLOBAL_GUI)
 	IF((SC_GLOBAL_GUI_QT5) AND (SC_GLOBAL_GUI_QT6))
 		MESSAGE(FATAL_ERROR "Qt5 and Qt6 are enabled, please decide for one of them")
 	ENDIF()
-	IF(SC_GLOBAL_GUI_QT5)
-		FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Widgets)
-		MESSAGE(STATUS "Use Qt5")
-	ENDIF()
+	
+    IF(SC_GLOBAL_GUI_QT5)
+ 	    IF(APPLE)
+            EXECUTE_PROCESS(COMMAND brew --prefix qt@5
+             RESULT_VARIABLE BREW_QT5_RESULT
+             OUTPUT_VARIABLE BREW_QT5_PREFIX
+             OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+            IF(BREW_QT5_RESULT EQUAL 0 AND EXISTS "${BREW_QT5_PREFIX}")
+                MESSAGE(STATUS "Found Qt5 installed by Homebrew at ${BREW_QT5_PREFIX}")
+                MESSAGE(STATUS "Qt5 is deprecated, recommended is Qt6.")
+                MESSAGE(STATUS "Remove Qt5 with: brew remove qt@5")
+                MESSAGE(STATUS "Install Qt6 with: brew install qt")
+                LIST(APPEND CMAKE_PREFIX_PATH "${BREW_QT5_PREFIX}")
+            ELSE()
+                MESSAGE(STATUS "Homebrew version of Qt5 not found!")
+                MESSAGE(FATAL_ERROR "Since Qt5 is deprecated prefer to install Qt6 with: brew install qt")
+            ENDIF()
+        ENDIF()
+ 		FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Widgets)
+ 	ENDIF(SC_GLOBAL_GUI_QT5)
+ 	
 	IF(SC_GLOBAL_GUI_QT6)
+	    IF(APPLE)
+            EXECUTE_PROCESS(COMMAND brew --prefix qt
+                RESULT_VARIABLE BREW_QT6_RESULT
+                OUTPUT_VARIABLE BREW_QT6_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+            )
+    
+            IF(BREW_QT6_RESULT EQUAL 0 AND EXISTS "${BREW_QT6_PREFIX}")
+                MESSAGE(STATUS "Found Qt6 via Homebrew at ${BREW_QT6_PREFIX}")
+                LIST(APPEND CMAKE_PREFIX_PATH "${BREW_QT6_PREFIX}")
+            ELSE()
+                MESSAGE(STATUS "Homebrew version of Qt6 not found!")
+                MESSAGE(FATAL_ERROR "Install with: brew install qt")
+         ENDIF()
 		FIND_PACKAGE(Qt6 REQUIRED COMPONENTS Core Widgets)
-		MESSAGE(STATUS "Use Qt6")
-	ENDIF()
-ENDIF()
+	    ENDIF()
+    ENDIF(SC_GLOBAL_GUI_QT6)
+ENDIF(SC_GLOBAL_GUI)
 
-INCLUDE(AddFileDependencies)
-INCLUDE(SeisComP)
+IF(NOT APPLE)
+    INCLUDE(AddFileDependencies)
+    INCLUDE(SeisComP)
+ENDIF()
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "")
 SET(CPACK_PACKAGE_VENDOR "seiscomp-devel@gfz-potsdam.de")
