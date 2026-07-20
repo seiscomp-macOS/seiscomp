@@ -393,80 +393,77 @@ ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
  	SET (LINUX 1)
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-# If gcc is installed add -wall and -pedantic to the commandline
-#
-IF (CMAKE_COMPILER_IS_GNUCC)
-	IF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-		ADD_DEFINITIONS(-Wall -pedantic -Wno-long-long -Wno-variadic-macros)
-		#ADD_DEFINITIONS(-Wall -Wno-long-long -Wno-variadic-macros)
-	ELSE ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-		ADD_DEFINITIONS(-Wall)
-	ENDIF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+IF(NOT APPLE)
+    # If gcc is installed add -wall and -pedantic to the commandline
+    #
+    IF (CMAKE_COMPILER_IS_GNUCC)
+        IF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+            ADD_DEFINITIONS(-Wall -pedantic -Wno-long-long -Wno-variadic-macros)
+            #ADD_DEFINITIONS(-Wall -Wno-long-long -Wno-variadic-macros)
+        ELSE ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+            ADD_DEFINITIONS(-Wall)
+        ENDIF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
+    
+        # Query gcc version. We can't use CMAKE_CXX_COMPILER_VERSION which is
+        # only supported in cmake >= 2.8.10. SLES 11 still comes with cmake 2.6.
+        EXECUTE_PROCESS(
+            COMMAND ${CMAKE_C_COMPILER} -dumpversion
+            OUTPUT_VARIABLE GCC_VERSION
+        )
+    
+        STRING(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
+        LIST(LENGTH GCC_VERSION_COMPONENTS GCC_VERSION_COMPONENTS_SIZE)
+        LIST(GET GCC_VERSION_COMPONENTS 0 GCC_VERSION_MAJOR)
+        # E.g. Fedora 26 does by default report only the major version number (7)
+        # The new option "-dumpfullversion" is not available on older compilers
+        IF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+            LIST(GET GCC_VERSION_COMPONENTS 1 GCC_VERSION_MINOR)
+        ELSE(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+            SET(GCC_VERSION_MINOR 0)
+        ENDIF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+    
+        MESSAGE(STATUS "Found GCC version ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}")
+    
+        # Enable C++17 features
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    
+        # Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
+        # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
+        IF ( FORCE_CXX11_ABI_0 )
+            ADD_COMPILE_DEFINITIONS(_GLIBCXX_USE_CXX11_ABI=0)
+        ENDIF ()
+    ENDIF (CMAKE_COMPILER_IS_GNUCC)
+    
+    ADD_DEFINITIONS(
+	    -DSHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+	    -DSHARED_MODULE_SUFFIX="${CMAKE_SHARED_MODULE_SUFFIX}"
+    )
 
-	# Query gcc version. We can't use CMAKE_CXX_COMPILER_VERSION which is
-	# only supported in cmake >= 2.8.10. SLES 11 still comes with cmake 2.6.
-	EXECUTE_PROCESS(
-		COMMAND ${CMAKE_C_COMPILER} -dumpversion
-		OUTPUT_VARIABLE GCC_VERSION
-	)
+    # Helper for Eclipse CDT
+    #
+    IF (CMAKE_COMPILER_IS_GNUCC)
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
+    IF (CMAKE_COMPILER_IS_GNUCXX)
+        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
+            MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
+    7.0.0 is required for C++17 language features.")
+        ENDIF ()
+    
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
+    ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+    
+    ADD_DEFINITIONS(-D_REENTRANT)
 
-	STRING(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
-	LIST(LENGTH GCC_VERSION_COMPONENTS GCC_VERSION_COMPONENTS_SIZE)
-	LIST(GET GCC_VERSION_COMPONENTS 0 GCC_VERSION_MAJOR)
-	# E.g. Fedora 26 does by default report only the major version number (7)
-	# The new option "-dumpfullversion" is not available on older compilers
-	IF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
-		LIST(GET GCC_VERSION_COMPONENTS 1 GCC_VERSION_MINOR)
-	ELSE(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
-		SET(GCC_VERSION_MINOR 0)
-	ENDIF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
+ENDIF()
 
-	MESSAGE(STATUS "Found GCC version ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}")
-
-	IF(GCC_VERSION VERSION_LESS "5.0")
-		MESSAGE(FATAL_ERROR "GCC version ${GCC_VERSION} found but at least 5.0 required as minimum. Version 9 or later is preferrable.")
-	ENDIF()
-
-	# Enable C++17 features
-	SET(CMAKE_CXX_STANDARD 17)
-	SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-	# Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
-	# see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-	IF ( FORCE_CXX11_ABI_0 )
-		ADD_COMPILE_DEFINITIONS(_GLIBCXX_USE_CXX11_ABI=0)
-	ENDIF ()
-ENDIF (CMAKE_COMPILER_IS_GNUCC)
-
-# Set the platform specific suffix for dynamic libraries
-ADD_DEFINITIONS(
-	-DSHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
-	-DSHARED_MODULE_SUFFIX="${CMAKE_SHARED_MODULE_SUFFIX}"
- )
-
-# Helper for Eclipse CDT
-#
-IF (CMAKE_COMPILER_IS_GNUCC)
-	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
-IF (CMAKE_COMPILER_IS_GNUCXX)
-	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
-		MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
-7.0.0 is required for C++17 language features.")
-	ENDIF ()
-
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-
-ADD_DEFINITIONS(-D_REENTRANT)
 
 IF(SC_GLOBAL_UNITTESTS)
-	MESSAGE(STATUS "Enable unit tests")
-	FIND_PACKAGE(Boost REQUIRED COMPONENTS unit_test_framework)
-	ENABLE_TESTING()
-ELSE(SC_GLOBAL_UNITTESTS)
-	FIND_PACKAGE(Boost)
-	MESSAGE(STATUS "Disable unit tests")
+        MESSAGE(STATUS "Enable unit tests")
+        FIND_PACKAGE(Boost REQUIRED COMPONENTS unit_test_framework)
+        ENABLE_TESTING()
+    ELSE(SC_GLOBAL_UNITTESTS)
+        MESSAGE(STATUS "Disable unit tests")
 ENDIF(SC_GLOBAL_UNITTESTS)
 
 SUBDIRS(src doc)
