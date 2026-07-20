@@ -387,8 +387,8 @@ SET(SC3_PACKAGE_TEMPLATES_DIR templates)
 # Platform check
 #
 IF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	SET (MACOSX 1)
-	MESSAGE(STATUS "MACOSX detected")
+	#SET (MACOSX 1) ## old SeisComP code: use keyword APPLE instead
+	MESSAGE(STATUS "macOS detected")
 ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
  	SET (LINUX 1)
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
