@@ -12,6 +12,93 @@ IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
 	CMAKE_POLICY(SET CMP0175 OLD)
 ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
 
+IF(APPLE)
+    # First check if Xcode.app or CommandLineTools are installed
+    # 1. Fast Path: Check the default standalone location
+    IF(NOT EXISTS "/Library/Developer/CommandLineTools")
+        # Query the system for full Xcode or custom paths
+        EXECUTE_PROCESS(
+            COMMAND xcode-select -p
+            RESULT_VARIABLE COMMANDLINETOOLS_RESULT
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+        IF(NOT COMMANDLINETOOLS_RESULT EQUAL 0)
+            MESSAGE(FATAL_ERROR "Xcode Command Line Tools not found. Install with 'xcode-select --install' in your terminal.")
+        ENDIF()
+    ENDIF()
+    
+   IF(NOT CMAKE_OSX_ARCHITECTURES)
+        # CMAKE_HOST_SYSTEM_PROCESSOR isn't populated until PROJECT() runs
+        # so query the OS directly instead.
+        EXECUTE_PROCESS(
+            COMMAND uname -m
+            OUTPUT_VARIABLE TARGET_ARCH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    ELSE()
+        LIST(GET CMAKE_OSX_ARCHITECTURES 0 TARGET_ARCH)
+    ENDIF()
+    
+    SET(CMAKE_OSX_ARCHITECTURES "${TARGET_ARCH}" CACHE STRING "BUILD ARCHITECTURE" FORCE)
+
+    IF(TARGET_ARCH MATCHES "^arm64")
+        MESSAGE(STATUS "SINGLE-ARCH BUILD: APPLE SILICON (arm64)")
+        SET(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS version for arm64")
+        IF(EXISTS "/opt/homebrew")
+            LIST(APPEND CMAKE_PREFIX_PATH "/opt/homebrew")
+            LIST(APPEND CMAKE_IGNORE_PREFIX_PATH "/usr/local")
+        ELSE()
+            MESSAGE(FATAL_ERROR "Homebrew for macOS not installed! Please follow the installation instructions from: https://brew.sh")
+        ENDIF()
+    ELSEIF(TARGET_ARCH MATCHES "^x86_64")
+        MESSAGE(STATUS "SINGLE-ARCH BUILD: INTEL MAC (x86_64)")
+        SET(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "Minimum macOS version for x86_64")
+        IF(EXISTS "/usr/local/Cellar")        
+            LIST(APPEND CMAKE_PREFIX_PATH "/usr/local/")
+            LIST(APPEND CMAKE_IGNORE_PREFIX_PATH "/opt/homebrew")
+        ELSE()
+            MESSAGE(FATAL_ERROR "Homebrew for macOS not installed! Please follow the installation instructions from: https://brew.sh")
+        ENDIF()
+    ELSE()
+        MESSAGE(FATAL_ERROR "macOS: Unexpected/Unsupported Target Architecture: '${TARGET_ARCH}'")
+    ENDIF()
+
+    SET(CMAKE_C_STANDARD 17)
+    SET(CMAKE_C_STANDARD_REQUIRED ON)
+    SET(CMAKE_CXX_STANDARD 17)
+    SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+    # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
+    SET(CMAKE_FIND_FRAMEWORK LAST)
+    
+    # Suppress QT6 OpenGL linking warnings 
+    SET(OPENGL_INCLUDE_DIR "/System/Library/Frameworks/OpenGL.framework/Headers" CACHE PATH "" FORCE)
+    SET(OPENGL_gl_LIBRARY "/System/Library/Frameworks/OpenGL.framework" CACHE FILEPATH "" FORCE)
+    SET(OPENGL_GLU_INCLUDE_DIR "/System/Library/Frameworks/OpenGL.framework/Headers" CACHE PATH "" FORCE)
+    SET(OPENGL_glu_LIBRARY "/System/Library/Frameworks/OpenGL.framework" CACHE FILEPATH "" FORCE)
+
+    # Set RPATH for macOS - adds run-time search path for dynamic linking to libraries when building the applications
+    # Avoids error "dyld: Library not loaded" when launching a compiled program
+    SET(CMAKE_MACOSX_RPATH ON)
+     
+    # When compiling don't use the install RPATH already, but later on when installing
+    SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+	
+    # Add the automatically determined parts of the RPATH
+    # which point to directories outside the build tree to the install RPATH
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    
+    # Add /lib to CMAKE_INSTALL_NAME_DIR or it fails to launch apps (error: .dylib not found)
+	SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+	
+    ADD_COMPILE_DEFINITIONS(
+        SHARED_LIBRARY_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}"
+        SHARED_MODULE_SUFFIX="${CMAKE_SHARED_MODULE_SUFFIX}"
+    )
+    
+ENDIF()
+
 PROJECT(SeisComP)
 
 # Global options (see below):
