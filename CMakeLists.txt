@@ -2,6 +2,16 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.10.0 FATAL_ERROR)
 CMAKE_POLICY(SET CMP0003 NEW)
 CMAKE_POLICY(SET CMP0005 NEW)
 
+# Allows using FindPythonInterp and FindPythonLibs with cmake >= 3.28
+IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
+	CMAKE_POLICY(SET CMP0148 OLD)
+ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
+
+# Allows using certain add_custom_command keywords with cmake >= 3.31
+IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
+	CMAKE_POLICY(SET CMP0175 OLD)
+ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
+
 PROJECT(SeisComP)
 
 # Global options (see below):
@@ -30,10 +40,29 @@ OPTION(SC_GLOBAL_PYTHON_WRAPPER "Create Python 3 wrapper" ON)
 OPTION(SC_GLOBAL_PYTHON_WRAPPER_NUMPY "Add Numpy support for Python 3 wrapper" ON)
 OPTION(SC_ENABLE_CONTRIB "Enables descending into the contrib directory" ON)
 
-# Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
-# see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-OPTION(FORCE_CXX11_ABI_0 "Option description" OFF)
+IF(NOT APPLE)
+    # Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
+    # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
+    OPTION(FORCE_CXX11_ABI_0 "Option description" OFF)
 
+	IF ("${CMAKE_VERSION}" VERSION_LESS 3.12)
+	    SET(PythonInterp_FIND_VERSION 3)
+	    SET(PythonInterp_FIND_VERSION_MAJOR 3)
+	    SET(PythonInterp_FIND_VERSION_EXACT 0)
+	    FIND_PACKAGE(PythonInterp)
+        ELSE ("${CMAKE_VERSION}" VERSION_LESS 3.12)
+	    FIND_PACKAGE(Python 3 REQUIRED COMPONENTS Interpreter NumPy Development)
+	    IF (NOT PYTHON_EXECUTABLE)
+		    SET(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+	    ENDIF ()
+    ENDIF ("${CMAKE_VERSION}" VERSION_LESS 3.12)
+    EXECUTE_PROCESS(
+        COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version.split()[0])"
+        OUTPUT_VARIABLE PYTHON_VERSION
+    )
+    STRING(STRIP "${PYTHON_VERSION}" PYTHON_VERSION)
+    MESSAGE(STATUS "Python exec/version: ${PYTHON_EXECUTABLE} ${PYTHON_VERSION}")
+ENDIF()
 
 IF(APPLE)
     # IMPORTANT: Set Python3_FIND_STRATEGY to LOCATION so it will search for the given version number first
@@ -124,26 +153,17 @@ IF(APPLE)
     SET(PYTHON_INCLUDE_DIR ${Python3_INCLUDE_DIRS})
     SET(PYTHON_INCLUDE_PATH ${Python3_INCLUDE_DIRS})
     MESSAGE(STATUS "-----")
-    MESSAGE(STATUS "PYTHON_EXECUTABLE used:     ${PYTHON_EXECUTABLE}")
+    EXECUTE_PROCESS(
+        COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version.split()[0])"
+        OUTPUT_VARIABLE PYTHON_VERSION
+    )
+    STRING(STRIP "${PYTHON_VERSION}" PYTHON_VERSION)
+    MESSAGE(STATUS "PYTHON EXECUTABLE used: ${PYTHON_EXECUTABLE} ${PYTHON_VERSION}")
     MESSAGE(STATUS "PYTHON_LIBRARIES used: 	    ${PYTHON_LIBRARIES}")
     MESSAGE(STATUS "PYTHON_INCLUDE_PATH used:   ${PYTHON_INCLUDE_PATH}")
     MESSAGE(STATUS "PYTHON_INCLUDE_DIR used:	${PYTHON_INCLUDE_DIR}")
     MESSAGE(STATUS "-----")
-ENDIF(APPLE)
-
-
-IF(NOT APPLE)
-	SET(PythonInterp_FIND_VERSION 3)
-	SET(PythonInterp_FIND_VERSION_MAJOR 3)
-	SET(PythonInterp_FIND_VERSION_EXACT 0)
-	FIND_PACKAGE(PythonInterp)
-    
-    EXEC_PROGRAM(
-	${PYTHON_EXECUTABLE}
-	ARGS "-c \"import sys;print(sys.version[:3])\""
-	OUTPUT_VARIABLE PYTHON_VERSION
-)
-ENDIF(NOT APPLE)
+ENDIF()
 
 IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 	IF(APPLE)
@@ -173,20 +193,29 @@ IF(SC_GLOBAL_PYTHON_WRAPPER_NUMPY)
 			MESSAGE(STATUS "NumPy version found: ${Python3_NumPy_VERSION}")
 			MESSAGE(STATUS "-----")
 		ELSE()
-			MESSAGE(FATAL_ERROR "NumPy not installed. Install with following commands: brew install python; brew install numpy; pip3 install numpy")	
+			MESSAGE(FATAL_ERROR "NumPy not installed. Install with: brew install python; brew install numpy")	
 		ENDIF()
 	ELSE()
-		FIND_PACKAGE(Numpy)	
-	ENDIF(APPLE)
+		FIND_PACKAGE(Numpy)
+	    IF (NOT PYTHON_NUMPY_INCLUDE_DIR AND "${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.12)
+		    FIND_PACKAGE(Python 3 REQUIRED COMPONENTS Interpreter NumPy Development)
+		    SET(PYTHON_NUMPY_INCLUDE_DIR "${Python_NumPy_INCLUDE_DIRS}")
+	    ENDIF()
+	ENDIF()
 ENDIF()
 
+# Disable the depreacted Pythonlibs & PythonInterp on macOS
+IF(NOT APPLE)
+    FIND_PACKAGE(PythonLibs REQUIRED)
+    FIND_PACKAGE(PythonInterp REQUIRED)
+ENDIF()
 
 SET(PYTHON_LIBRARY_SUFFIX /python)
 SET(PYTHON_LIBRARY_PATH lib${PYTHON_LIBRARY_SUFFIX})
 
 OPTION(SC_GLOBAL_GUI "Build graphical user interfaces (requires Qt5 or Qt6)" ON)
-OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" OFF)
-OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" ON)
+OPTION(SC_GLOBAL_GUI_QT5 "Build graphical user interfaces with Qt5" ON)
+OPTION(SC_GLOBAL_GUI_QT6 "Build graphical user interfaces with Qt6" OFF)
 
 IF(SC_GLOBAL_GUI)
 	IF((NOT SC_GLOBAL_GUI_QT5) AND (NOT SC_GLOBAL_GUI_QT6))
@@ -196,47 +225,10 @@ IF(SC_GLOBAL_GUI)
 		MESSAGE(FATAL_ERROR "Qt5 and Qt6 are enabled, please decide for one of them")
 	ENDIF()
 	IF(SC_GLOBAL_GUI_QT5)
-	IF(APPLE)
-        EXECUTE_PROCESS(COMMAND brew --prefix qt@5
-            RESULT_VARIABLE BREW_Qt5
-            OUTPUT_VARIABLE BREW_Qt5_PREFIX
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        IF(BREW_Qt5 EQUAL 0 AND EXISTS "${BREW_Qt5_PREFIX}")
-            MESSAGE(STATUS "Found Qt5 installed by Homebrew at ${BREW_Qt5_PREFIX}")
-            SET(Qt5_DIR "${BREW_Qt5_PREFIX}/lib/cmake/Qt5")
-            SET(Qt5_INCLUDE_DIR "${BREW_Qt5_PREFIX}/include/")
-            MESSAGE(STATUS "Homebrew Qt5_INCLUDE_DIR = ${Qt5_INCLUDE_DIR}")
-            INCLUDE_DIRECTORIES(${Qt5_INCLUDE_DIR})
-        ELSE()
-            MESSAGE(STATUS"Homebrew version of Qt5 not found!")
-            MESSAGE(FATAL_ERROR "Install with: brew install qt5")
-        ENDIF()
-    ENDIF(APPLE)
-
 		FIND_PACKAGE(Qt5 REQUIRED COMPONENTS Core Widgets)
 		MESSAGE(STATUS "Use Qt5")
 	ENDIF()
-	
 	IF(SC_GLOBAL_GUI_QT6)
-	IF(APPLE)
-        EXECUTE_PROCESS(COMMAND brew --prefix qt@6
-            RESULT_VARIABLE BREW_Qt6
-            OUTPUT_VARIABLE BREW_Qt6_PREFIX
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
-        IF(BREW_Qt6 EQUAL 0 AND EXISTS "${BREW_Qt6_PREFIX}")
-            MESSAGE(STATUS "Found latest Qt6 installed by Homebrew at ${BREW_Qt6_PREFIX}")
-            SET(Qt6_DIR "${BREW_Qt6_PREFIX}/lib/cmake/Qt6")
-            SET(Qt6_INCLUDE_DIR "${BREW_Qt6_PREFIX}/include/")
-            MESSAGE(STATUS "Homebrew Qt6_INCLUDE_DIR = ${Qt6_INCLUDE_DIR}")
-            INCLUDE_DIRECTORIES(${Qt6_INCLUDE_DIR})
-        ELSE()
-            MESSAGE(STATUS"Homebrew version of Qt6 not found!")
-            MESSAGE(FATAL_ERROR "Install with: brew install qt")
-        ENDIF()
-    ENDIF(APPLE)
-
 		FIND_PACKAGE(Qt6 REQUIRED COMPONENTS Core Widgets)
 		MESSAGE(STATUS "Use Qt6")
 	ENDIF()
@@ -281,92 +273,6 @@ IF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ELSEIF (UNIX AND ${CMAKE_SYSTEM_NAME} MATCHES "Linux")
  	SET (LINUX 1)
 ENDIF (APPLE AND ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-IF (NOT APPLE)
-    # If gcc is installed add -wall and -pedantic to the commandline
-    #
-    IF (CMAKE_COMPILER_IS_GNUCC)
-        IF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-            ADD_DEFINITIONS(-Wall -pedantic -Wno-long-long -Wno-variadic-macros)
-            #ADD_DEFINITIONS(-Wall -Wno-long-long -Wno-variadic-macros)
-        ELSE ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-            ADD_DEFINITIONS(-Wall)
-        ENDIF ( ${CMAKE_BUILD_TYPE} MATCHES "Debug" )
-    
-        # Query gcc version. We can't use CMAKE_CXX_COMPILER_VERSION which is
-        # only supported in cmake >= 2.8.10. SLES 11 still comes with cmake 2.6.
-        EXECUTE_PROCESS(
-            COMMAND ${CMAKE_C_COMPILER} -dumpversion
-            OUTPUT_VARIABLE GCC_VERSION
-        )
-    
-        STRING(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
-        LIST(LENGTH GCC_VERSION_COMPONENTS GCC_VERSION_COMPONENTS_SIZE)
-        LIST(GET GCC_VERSION_COMPONENTS 0 GCC_VERSION_MAJOR)
-        # E.g. Fedora 26 does by default report only the major version number (7)
-        # The new option "-dumpfullversion" is not available on older compilers
-        IF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
-            LIST(GET GCC_VERSION_COMPONENTS 1 GCC_VERSION_MINOR)
-        ELSE(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
-            SET(GCC_VERSION_MINOR 0)
-        ENDIF(GCC_VERSION_COMPONENTS_SIZE GREATER 1)
-    
-        MESSAGE(STATUS "Found GCC version ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}")
-    
-        # Enable C++17 features
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-    
-        # Modern GCC (>= 5.1) on old systems with libraries compiled with ABI version 0.
-        # see https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
-        IF ( FORCE_CXX11_ABI_0 )
-            ADD_COMPILE_DEFINITIONS(_GLIBCXX_USE_CXX11_ABI=0)
-        ENDIF ()
-    ENDIF (CMAKE_COMPILER_IS_GNUCC)
-ENDIF(NOT APPLE)
-
-IF(APPLE)
-    #SET(CMAKE_VERBOSE_MAKEFILE 1)
-    # Check Mac architecture: arm64 (Apple Silicon) or x86_64 Mac INTEL
-	EXECUTE_PROCESS(COMMAND uname -m 
-	    OUTPUT_VARIABLE CMAKE_OSX_ARCHITECTURES
-	    OUTPUT_STRIP_TRAILING_WHITESPACE
-	)
-	IF(${CMAKE_OSX_ARCHITECTURES} MATCHES "arm64" )
-		  MESSAGE(STATUS "Detected Apple Silicon arm64 architecture")
-		  SET(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "Apple Silicon Architectures")
-		  SET(MACOS_HOMEBREW_PATH "/opt/homebrew/")
-  		  SET(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
-  		  # Add flag -march=native to optimize code specifically for the machine when compiling
-		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -march=native")
-		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -march=native")
-	ELSEIF(${CMAKE_OSX_ARCHITECTURES} MATCHES "x86_64")
-		  MESSAGE(STATUS "Detected Apple INTEL x86_64 architecture")
-		  SET(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "Apple INTEL Architectures")
-		  SET(MACOS_HOMEBREW_PATH "/usr/local/")
-	  	  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "")
-	  	  # Add flag -march=native to optimize code specifically for the machine when compiling
-		  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -march=native")
-		  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -march=native")
-	ELSE()
-		 MESSAGE(FATAL_ERROR "Unknown macOS architecture found!")
-	ENDIF()
-
-    # On macOS try to find (Homebrew) frameworks after system's standard libraries or headers. Default is FIRST.
-    SET(CMAKE_FIND_FRAMEWORK LAST)
-    # Set RPATH for macOS - adds run-time search path for dynamic linking to libraries when building the applications
-    # Avoids error "dyld: Library not loaded" when launching a compiled program
-    SET(CMAKE_MACOSX_RPATH ON)
-     
-    # When compiling don't use the install RPATH already, but later on when installing
-    SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-	
-    # Add the automatically determined parts of the RPATH
-    # which point to directories outside the build tree to the install RPATH
-    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-    # Add /lib to CMAKE_INSTALL_NAME_DIR or it fails to launch apps (error: .dylib not found)
-	SET(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
-	
-ENDIF(APPLE)
 
 # If gcc is installed add -wall and -pedantic to the commandline
 #
@@ -419,29 +325,28 @@ ADD_DEFINITIONS(
 	-DSHARED_MODULE_SUFFIX="${CMAKE_SHARED_MODULE_SUFFIX}"
  )
 
-IF (NOT APPLE)
-    # Helper for Eclipse CDT
-    #
-    IF (CMAKE_COMPILER_IS_GNUCC)
-        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
-    ENDIF(CMAKE_COMPILER_IS_GNUCC)
-    IF (CMAKE_COMPILER_IS_GNUCXX)
-        IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
-            MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
-    7.0.0 is required for C++17 language features.")
-        ENDIF ()
-    
-        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
-    ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-    
-    ADD_DEFINITIONS(-D_REENTRANT)
-ENDIF(NOT APPLE)
+# Helper for Eclipse CDT
+#
+IF (CMAKE_COMPILER_IS_GNUCC)
+	SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+IF (CMAKE_COMPILER_IS_GNUCXX)
+	IF (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "7.0.0")
+		MESSAGE(FATAL_ERROR "Insufficient GCC version. At least version \
+7.0.0 is required for C++17 language features.")
+	ENDIF ()
+
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+ADD_DEFINITIONS(-D_REENTRANT)
 
 IF(SC_GLOBAL_UNITTESTS)
 	MESSAGE(STATUS "Enable unit tests")
 	FIND_PACKAGE(Boost REQUIRED COMPONENTS unit_test_framework)
 	ENABLE_TESTING()
 ELSE(SC_GLOBAL_UNITTESTS)
+	FIND_PACKAGE(Boost)
 	MESSAGE(STATUS "Disable unit tests")
 ENDIF(SC_GLOBAL_UNITTESTS)
 
