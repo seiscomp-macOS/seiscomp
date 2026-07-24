@@ -129,6 +129,7 @@ IF(APPLE)
     INCLUDE("${PROJECT_SOURCE_DIR}/cmake/FindMySQL.cmake")
     INCLUDE("${PROJECT_SOURCE_DIR}/cmake/SeisComP.cmake")
     INCLUDE("${PROJECT_SOURCE_DIR}/cmake/FindSPREAD.cmake")
+    INCLUDE("${PROJECT_SOURCE_DIR}/cmake/FindSQLite3.cmake")
 ENDIF()
 
 FIND_PACKAGE(LibXml2 REQUIRED)
