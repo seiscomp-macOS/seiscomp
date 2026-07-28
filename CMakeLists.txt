@@ -2,12 +2,17 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.30.0 FATAL_ERROR)
 CMAKE_POLICY(SET CMP0003 NEW)
 CMAKE_POLICY(SET CMP0005 NEW)
 
-# Allows using FindPythonInterp and FindPythonLibs with cmake >= 3.28
-IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
-	CMAKE_POLICY(SET CMP0148 OLD)
-ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
+# On macOS use cmake's internal module FindPython3, do not use "CMP0148 OLD" policy.
+# The CMP0148 OLD behavior is for find_package(PythonInterp) and find_package(PythonLibs) to load the deprecated modules.
+IF(NOT APPLE)
+    # Allows using FindPythonInterp and FindPythonLibs with cmake >= 3.28
+    IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
+        CMAKE_POLICY(SET CMP0148 OLD)
+    ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.28)
+ENDIF()
 
 # Allows using certain add_custom_command keywords with cmake >= 3.31
+# e.g. keywords "DEPENDS, OUTPUTS" for add_custom_command(TARGET) for common/libs/3rd-party/tau
 IF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
 	CMAKE_POLICY(SET CMP0175 OLD)
 ENDIF ("${CMAKE_VERSION}" VERSION_GREATER_EQUAL 3.31)
